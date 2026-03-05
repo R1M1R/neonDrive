@@ -47,7 +47,7 @@
         .screen.active { display: flex; opacity: 1; }
         .panel { background: rgba(15, 10, 25, 0.95); border: 2px solid var(--neon-pink); border-radius: 24px; padding: 30px; text-align: center; max-width: 85%; width: 320px; box-shadow: 0 0 40px rgba(255, 0, 119, 0.5); position: relative;}
         
-        h1 { font-size: 32px; margin: 0 0 15px; letter-spacing: 3px; font-weight: 900; background: linear-gradient(to bottom, #fff, var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--neon-blue)); }
+        h1 { font-size: 32px; margin: 0 0 15px; letter-spacing: 3px; font-weight: 900; background: linear-gradient(to bottom, #fff, var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--neon-blue)); cursor: pointer; user-select: none; }
         
         .btn { background: var(--neon-pink); border: none; padding: 14px 20px; color: #fff; border-radius: 40px; font-weight: bold; font-size: 15px; cursor: pointer; margin: 6px 0; width: 100%; box-shadow: 0 0 20px rgba(255,0,119,0.6); text-transform: uppercase; transition: 0.2s; }
         .btn:active { transform: scale(0.94); filter: brightness(1.2); }
@@ -95,7 +95,7 @@
         .u-bar.fill { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
 
         /* Notification */
-        .notif { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; box-shadow: 0 0 25px var(--neon-green); text-transform: uppercase;}
+        .notif { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; box-shadow: 0 0 25px var(--neon-green); text-transform: uppercase; text-align: center;}
         .notif.show { top: env(safe-area-inset-top, 20px); }
 
         /* Daily Bonus */
@@ -277,7 +277,8 @@ class GameEngine {
             { id: 'purple', color: 0x9900ff, cost: 1500, name: 'ПЛАЗМА' },
             { id: 'white', color: 0xffffff, cost: 2000, name: 'КВАНТ' },
             { id: 'gold', color: 0xffd700, cost: 3000, name: 'АУРУМ' },
-            { id: 'ghost', color: 0x88bbff, cost: 5000, name: 'ФАНТОМ' }
+            { id: 'ghost', color: 0x88bbff, cost: 5000, name: 'ФАНТОМ' },
+            { id: 'hacker', color: 0x00ff00, cost: 999999, name: 'ХАКЕР' } // Секретный скин (не купить)
         ];
         
         this.upgradesData = {
@@ -291,6 +292,11 @@ class GameEngine {
         this.targetBiome = 0;
         this.activeTab = 'skins';
         
+        // Easter Eggs tracking
+        this.titleClicks = 0;
+        this.lastJumpTime = 0;
+        this.barrelRollActive = false;
+
         this.musicNextNoteTime = 0;
         this.musicStep = 0;
         this.masterGain = null;
@@ -459,7 +465,7 @@ class GameEngine {
         this.mission = JSON.parse(localStorage.getItem('neon_mission')) || this.generateMission();
         
         this.lane = 0;
-        this.speed = 0;
+        this.speed = 18;
         this.combo = 1;
         this.laneWidth = 3.5;
         this.magnetTime = 0;
@@ -490,16 +496,13 @@ class GameEngine {
         return new THREE.CanvasTexture(canvas);
     }
 
-    // НАСТРОЙКА АДАПТИВНОЙ КАМЕРЫ (Чтобы байк не срезался на телефонах)
     updateCameraFraming() {
         const aspect = window.innerWidth / window.innerHeight;
         if (aspect < 1.0) {
-            // Для вертикальных экранов - оттягиваем камеру и расширяем FOV
-            this.baseFov = 75 * (1.0 / aspect) * 0.6; // Магическое число для идеального кадрирования
+            this.baseFov = 75 * (1.0 / aspect) * 0.6; 
             this.camera.position.set(0, 4.5, 8.5); 
             this.camera.lookAt(0, 1.5, -2);
         } else {
-            // Для ПК и горизонтальных
             this.baseFov = 70;
             this.camera.position.set(0, 4.0, 8.0);
             this.camera.lookAt(0, 1.5, -2);
@@ -534,7 +537,7 @@ class GameEngine {
         floor.rotation.x = -Math.PI / 2;
         this.scene.add(floor);
 
-        // Солнце (Больше и выше как на референсе)
+        // Солнце
         this.sunMat = new THREE.ShaderMaterial({
             uniforms: { 
                 uTime: {value: 0},
@@ -547,28 +550,24 @@ class GameEngine {
         sun.position.set(0, 30, -150);
         this.scene.add(sun);
 
-        // ГРУППА ИГРОКА: ДЕТАЛИЗИРОВАННЫЙ КИБЕР-КУБ (Как на картинке)
+        // ГРУППА ИГРОКА
         this.player = new THREE.Group();
         
-        // Внутреннее темное ядро
         const bodyGeo = new THREE.BoxGeometry(1.0, 1.0, 1.0);
         this.playerBaseMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.1, metalness: 0.9 });
         const bodyMesh = new THREE.Mesh(bodyGeo, this.playerBaseMat);
         
-        // Внешний светящийся каркас (Wireframe)
         const frameGeo = new THREE.BoxGeometry(1.05, 1.05, 1.05);
         const edges = new THREE.EdgesGeometry(frameGeo);
         this.playerEdgeMat = new THREE.LineBasicMaterial({ color: this.getSkinColor(), linewidth: 2 });
         this.playerLines = new THREE.LineSegments(edges, this.playerEdgeMat);
         bodyMesh.add(this.playerLines);
 
-        // Доп. внутренний каркас для сложности детализации
         const innerFrameGeo = new THREE.BoxGeometry(0.8, 1.1, 0.8);
         const innerEdges = new THREE.EdgesGeometry(innerFrameGeo);
         this.playerInnerLines = new THREE.LineSegments(innerEdges, this.playerEdgeMat);
         bodyMesh.add(this.playerInnerLines);
 
-        // Боковые кольца-колеса
         const wheelGeo = new THREE.TorusGeometry(0.35, 0.1, 8, 24);
         this.playerWheelMat = new THREE.MeshBasicMaterial({ color: this.getSkinColor() });
         this.wheelL = new THREE.Mesh(wheelGeo, this.playerWheelMat);
@@ -578,7 +577,6 @@ class GameEngine {
         this.wheelR.position.set(0.55, -0.3, 0);
         this.wheelR.rotation.y = Math.PI / 2;
         
-        // Внутренние диски колес
         const discGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16);
         const discMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
         const discL = new THREE.Mesh(discGeo, discMat); discL.rotation.z = Math.PI/2; this.wheelL.add(discL);
@@ -599,7 +597,7 @@ class GameEngine {
         this.shieldMesh.visible = false;
         this.player.add(this.shieldMesh);
 
-        // Мощное свечение под кубом
+        // Свечение под кубом
         const glowTex = this.createFloorGlowTexture();
         this.floorGlow = new THREE.Mesh(
             new THREE.PlaneGeometry(6, 6),
@@ -611,12 +609,10 @@ class GameEngine {
 
         this.scene.add(this.player);
 
-        // Динамический свет
         this.pLight = new THREE.PointLight(this.getSkinColor(), 3, 15);
         this.pLight.position.set(0, 1.0, 0);
         this.player.add(this.pLight);
 
-        // Звездный фон и космическая пыль
         const starGeo = new THREE.BufferGeometry();
         const starPos = [];
         for(let i=0; i<600; i++) starPos.push((Math.random()-0.5)*200, Math.random()*100, (Math.random()-0.5)*250);
@@ -633,13 +629,12 @@ class GameEngine {
         const skin = this.skins.find(s => s.id === this.currentSkin);
         const hex = skin.color;
         
-        // Обновляем цвета
         this.playerEdgeMat.color.setHex(hex);
         this.playerWheelMat.color.setHex(hex);
         this.floorGlow.material.color.setHex(hex);
         this.pLight.color.setHex(hex);
         
-        if (skin.id === 'ghost') {
+        if (skin.id === 'ghost' || skin.id === 'hacker') {
             this.playerBaseMat.transparent = true;
             this.playerBaseMat.opacity = 0.2;
             this.playerBaseMat.wireframe = true;
@@ -658,6 +653,9 @@ class GameEngine {
         
         if (this.activeTab === 'skins') {
             this.skins.forEach(skin => {
+                // Скрываем секретный скин из магазина, если он не разблокирован
+                if (skin.id === 'hacker' && !this.unlockedSkins.includes('hacker')) return;
+
                 const btn = document.createElement('div');
                 const isUnlocked = this.unlockedSkins.includes(skin.id);
                 const isEquipped = this.currentSkin === skin.id;
@@ -805,20 +803,38 @@ class GameEngine {
         let sx = null, sy = null;
         let swipeProcessed = false;
 
+        // ПАСХАЛКА 1: Секретный скин по клику на тайтл
+        document.getElementById('main-title').onclick = () => {
+            this.titleClicks++;
+            if (this.titleClicks === 5) {
+                if (!this.unlockedSkins.includes('hacker')) {
+                    this.unlockedSkins.push('hacker');
+                    this.currentSkin = 'hacker';
+                    this.showNotification("КОД ВЗЛОМАН: ОТКРЫТ СКИН 'ХАКЕР' 👾");
+                    this.playSfx(2000, 'square', 0.5, 0.2);
+                    this.saveProgress();
+                    this.applySkin();
+                } else {
+                    this.showNotification("ТЫ УЖЕ ХАКЕР!");
+                }
+                this.titleClicks = 0;
+            }
+        };
+
         window.addEventListener('pointerdown', e => {
-            if (e.target.closest('button') || e.target.closest('.shop-item') || e.target.closest('.shop-tab')) return;
+            if (e.target.closest('button') || e.target.closest('.shop-item') || e.target.closest('.shop-tab') || e.target.id === 'main-title') return;
             sx = e.clientX; sy = e.clientY;
             swipeProcessed = false;
             this.initAudioContext();
         });
 
-        // МГНОВЕННЫЙ СВАЙП: Реагируем во время движения пальца
+        // МГНОВЕННЫЙ СВАЙП
         window.addEventListener('pointermove', e => {
             if (!sx || !sy || swipeProcessed) return;
             
             const dx = e.clientX - sx;
             const dy = e.clientY - sy;
-            const threshold = 30; // Чувствительность свайпа
+            const threshold = 30;
 
             if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
                 if (Math.abs(dx) > Math.abs(dy)) {
@@ -827,13 +843,11 @@ class GameEngine {
                     if (dy < -threshold) this.jump();
                     if (dy > threshold) this.slide();
                 }
-                swipeProcessed = true; // Блокируем повторные срабатывания до отпускания пальца
+                swipeProcessed = true; 
             }
         });
 
-        window.addEventListener('pointerup', e => {
-            sx = null; sy = null; swipeProcessed = false;
-        });
+        window.addEventListener('pointerup', e => { sx = null; sy = null; swipeProcessed = false; });
 
         document.getElementById('btn-start').onclick = () => { this.initAudioContext(); this.start(); }
         document.getElementById('btn-revive').onclick = () => this.rewarded(false);
@@ -882,16 +896,33 @@ class GameEngine {
 
     jump() {
         if (this.state !== 'PLAYING' || this.isJumping) return;
-        this.isJumping = true; this.jumpV = 0.22;
+        this.isJumping = true; 
+        this.jumpV = 0.22;
+        this.lastJumpTime = performance.now(); // Для проверки Barrel Roll
         this.playSfx(500, 'sine', 0.2);
         this.updateMission('jumps', 1);
     }
 
     slide() {
         if (this.state !== 'PLAYING' || this.isSliding) return;
+        
+        // ПАСХАЛКА 2: DO A BARREL ROLL
+        // Если сделали подкат сразу после прыжка (меньше 400 мс)
+        if (this.isJumping && performance.now() - this.lastJumpTime < 400 && !this.barrelRollActive) {
+            this.barrelRollActive = true;
+            this.combo += 2;
+            this.showNotification("DO A BARREL ROLL! КОМБО +2");
+            this.playSfx(1000, 'square', 0.4, 0.2);
+            setTimeout(() => { 
+                this.barrelRollActive = false; 
+                this.player.children[0].rotation.x = 0; // Сбрасываем вращение
+            }, 800);
+            return; // Отменяем обычный подкат
+        }
+
         this.isSliding = true; 
         this.player.scale.y = 0.4;
-        this.floorGlow.scale.y = 2.5; // Компенсация скейла свечения
+        this.floorGlow.scale.y = 2.5; 
         setTimeout(() => { 
             this.isSliding = false; 
             this.player.scale.y = 1; 
@@ -922,6 +953,7 @@ class GameEngine {
         this.shieldMesh.visible = false;
         this.currentBiome = 0;
         this.targetBiome = 0;
+        this.barrelRollActive = false;
         this.setBiomeColors(PALETTES[0]);
 
         if (this.audioCtx) {
@@ -951,7 +983,7 @@ class GameEngine {
         document.getElementById('speed-lines').style.opacity = '0';
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('screen-start').classList.add('active');
-        this.activeObstacles.forEach(o => o.visible = false);
+        this.activeObstacles.forEach(o => { o.visible = false; if(o.isUFO) this.scene.remove(o); });
         this.activeCoins.forEach(c => c.visible = false);
         this.scenery.forEach(s => s.visible = false);
         this.setBiomeColors(PALETTES[0]); 
@@ -978,12 +1010,27 @@ class GameEngine {
             group.visible = true;
             this.scenery.push(group);
         }
+
+        // ПАСХАЛКА 3: Редкое НЛО на фоне
+        if (Math.random() < 0.001) {
+            const ufo = new THREE.Group();
+            const dome = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.8}));
+            const base = new THREE.Mesh(new THREE.TorusGeometry(2, 0.4, 8, 24), new THREE.MeshStandardMaterial({color: 0x222222, emissive: 0x00ff00, emissiveIntensity: 0.5}));
+            ufo.add(dome); ufo.add(base);
+            ufo.position.set(30, 15, -120);
+            ufo.isUFO = true;
+            this.scene.add(ufo);
+            this.activeObstacles.push(ufo); // Используем массив препятствий просто для движения, без коллизий
+        }
     }
 
     spawn() {
         this.spawnScenery();
 
-        if (Math.random() < 0.02) {
+        // Прогрессивная сложность: чем выше скорость, тем чаще спавн
+        const spawnMultiplier = this.speed / 18;
+
+        if (Math.random() < 0.02 * spawnMultiplier) {
             let o = this.pool.obstacles.pop() || new THREE.Mesh(
                 new THREE.BoxGeometry(2, 1.2, 1.5),
                 new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0xff00c8, emissiveIntensity: 1 })
@@ -1011,7 +1058,7 @@ class GameEngine {
             o.visible = true; this.scene.add(o); this.activeObstacles.push(o);
         }
         
-        if (Math.random() < 0.03) {
+        if (Math.random() < 0.03 * spawnMultiplier) {
             let c = this.pool.coins.pop() || new THREE.Mesh(
                 new THREE.TorusGeometry(0.4, 0.1, 8, 16),
                 new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2 })
@@ -1126,7 +1173,6 @@ class GameEngine {
         this.activeObstacles.forEach(o => { if(o.position.z > -20 && o.position.z < 10) o.visible = false; });
     }
 
-    // ИСКРЫ ИЗ-ПОД КОЛЕС (Эффект трения как на обложке)
     spawnEngineSparks() {
         if (!this.isJumping) {
             for(let i=0; i<3; i++) {
@@ -1136,11 +1182,10 @@ class GameEngine {
                 );
                 const side = Math.random() > 0.5 ? 1 : -1;
                 p.position.copy(this.player.position);
-                p.position.y = 0.05; // У самого пола
-                p.position.x += side * 0.6; // Из-под боковых колес
-                p.position.z += 0.5; // Смещаем назад
+                p.position.y = 0.05; 
+                p.position.x += side * 0.6; 
+                p.position.z += 0.5; 
                 
-                // Вылетают назад и в стороны
                 p.velocity = new THREE.Vector3(side * (Math.random()*0.3 + 0.1), Math.random()*0.1, Math.random()*0.6 + 0.3);
                 this.scene.add(p);
                 this.engineParticles.push(p);
@@ -1157,10 +1202,13 @@ class GameEngine {
             this.updateProceduralMusic();
 
             this.score += 0.1 * (this.speed/10) * this.combo;
-            this.speed = Math.min(38, this.speed + 0.002);
             
-            // Расчет FOV с учетом скорости
-            this.camera.fov = this.baseFov + (this.speed-18)*1.0;
+            // ПРОГРЕССИВНАЯ СКОРОСТЬ
+            // Базовая скорость 18, плюс микро-ускорение, плюс ускорение от текущих очков.
+            // Скорость плавно растет и может стать по-настоящему сумасшедшей.
+            this.speed += 0.0015 + (this.score * 0.0000005);
+            
+            this.camera.fov = this.baseFov + (this.speed-18)*1.2;
             this.camera.updateProjectionMatrix();
 
             const newBiome = Math.floor(this.score / 2000) % PALETTES.length;
@@ -1190,28 +1238,38 @@ class GameEngine {
             }
 
             const targetX = this.lane * this.laneWidth;
-            this.player.position.x += (targetX - this.player.position.x) * 0.18; // Сделали перестроение чуть резче
+            this.player.position.x += (targetX - this.player.position.x) * 0.18; 
             
-            // Наклон куба и камеры при перестроении
             const tilt = (this.player.position.x - targetX) * 0.12;
             this.player.rotation.z = tilt;
             this.player.rotation.y = tilt * 0.3;
             this.camera.rotation.z = tilt * -0.05; 
             
-            // Вращение колес куба
             this.wheelL.rotation.x -= this.speed * 0.02;
             this.wheelR.rotation.x -= this.speed * 0.02;
 
             if (this.isJumping) {
                 this.player.position.y += this.jumpV;
                 this.jumpV -= 0.012;
-                if (this.player.position.y <= 0.65) { this.player.position.y = 0.65; this.isJumping = false; }
+                
+                // Вращение для Barrel Roll
+                if (this.barrelRollActive) {
+                    this.player.children[0].rotation.x -= 0.15;
+                }
+
+                if (this.player.position.y <= 0.65) { 
+                    this.player.position.y = 0.65; 
+                    this.isJumping = false; 
+                    if (this.barrelRollActive) {
+                        this.barrelRollActive = false;
+                        this.player.children[0].rotation.x = 0;
+                    }
+                }
             }
 
             this.spawn();
             this.spawnEngineSparks();
 
-            // Движение столбов
             this.scenery.forEach((s, i) => {
                 if (!s.visible) return;
                 s.position.z += this.speed * 0.05;
@@ -1224,6 +1282,18 @@ class GameEngine {
 
             this.activeObstacles.forEach((o, i) => {
                 if (!o.visible) return;
+
+                // Если это НЛО
+                if (o.isUFO) {
+                    o.position.x -= 0.15;
+                    o.rotation.y -= 0.02;
+                    if (o.position.x < -40) {
+                        this.scene.remove(o);
+                        this.activeObstacles.splice(i, 1);
+                    }
+                    return; // НЛО не имеет коллизий с игроком
+                }
+                
                 o.position.z += this.speed * 0.05;
 
                 if (o.isMover && o.position.z > -60 && o.position.z < -20) {
