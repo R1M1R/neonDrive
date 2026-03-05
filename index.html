@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Overdrive: Ultimate Edition</title>
+    <title>Кибер Раннер: Ультимативное Издание</title>
     
     <!-- Подключение иконки (Favicon) -->
     <link rel="icon" type="image/png" href="icon.png">
@@ -32,7 +32,7 @@
 
         #ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; }
         
-        /* HUD */
+        /* Игровой интерфейс */
         .hud { padding: calc(15px + var(--safe-top)) 20px; display: flex; justify-content: space-between; align-items: flex-start; }
         .hud-left { display: flex; gap: 10px; }
         .hud-item { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); border: 1px solid var(--neon-blue); padding: 8px 15px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); min-width: 80px; text-align: center; transition: border-color 1s, box-shadow 1s; }
@@ -42,7 +42,7 @@
         .btn-audio { pointer-events: auto; background: rgba(0,0,0,0.7); border: 1px solid #fff; border-radius: 50%; width: 40px; height: 40px; color: #fff; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 0 10px rgba(255,255,255,0.3); transition: 0.2s;}
         .btn-audio:active { transform: scale(0.9); }
 
-        /* Screens */
+        /* Экраны */
         .screen { position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(30,0,50,0.9) 0%, rgba(0,0,0,0.98) 100%); display: flex; align-items: center; justify-content: center; pointer-events: auto; opacity: 0; transition: 0.5s; display: none; z-index: 100; backdrop-filter: blur(5px); }
         .screen.active { display: flex; opacity: 1; }
         .panel { background: rgba(15, 10, 25, 0.95); border: 2px solid var(--neon-pink); border-radius: 24px; padding: 30px; text-align: center; max-width: 85%; width: 320px; box-shadow: 0 0 40px rgba(255, 0, 119, 0.5); position: relative;}
@@ -59,7 +59,7 @@
         .loader-bar { width: 220px; height: 6px; background: #222; margin-top: 20px; border-radius: 3px; overflow: hidden; border: 1px solid #444; }
         .loader-progress { width: 0%; height: 100%; background: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); transition: width 0.3s; }
 
-        /* Indicators */
+        /* Индикаторы */
         #combo-wrap { position: absolute; left: 50%; top: 15%; transform: translateX(-50%); font-style: italic; opacity: 0; transition: 0.2s; }
         #combo-wrap.show { opacity: 1; transform: translateX(-50%) scale(1.2); }
         .combo-val { font-size: 44px; font-weight: 900; color: var(--neon-yellow); text-shadow: 0 0 20px var(--neon-yellow); }
@@ -68,14 +68,14 @@
         #magnet-indicator { color: var(--neon-blue); }
         #shield-indicator { color: var(--neon-green); top: 110px; }
 
-        /* Mission UI */
+        /* Интерфейс миссий */
         .mission-box { background: rgba(0,0,0,0.6); border: 1px dashed var(--neon-yellow); border-radius: 12px; padding: 12px; margin-bottom: 15px; font-size: 13px; text-align: left; position: relative; }
         .mission-title { color: var(--neon-yellow); font-weight: bold; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;}
         .mission-progress { background: #333; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
         .mission-fill { background: var(--neon-yellow); height: 100%; width: 0%; transition: width 0.3s; box-shadow: 0 0 10px var(--neon-yellow); }
         .mission-reward { position: absolute; top: 12px; right: 12px; color: var(--neon-yellow); font-weight: bold; font-size: 14px;}
 
-        /* Shop Tabs & Grid */
+        /* Вкладки и сетка магазина */
         .shop-tabs { display: flex; margin-bottom: 10px; gap: 5px;}
         .shop-tab { flex: 1; background: #222; color: #aaa; border: 1px solid #444; border-radius: 10px; padding: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase;}
         .shop-tab.active { background: rgba(0, 255, 255, 0.15); color: var(--neon-blue); border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0,255,255,0.4);}
@@ -94,11 +94,11 @@
         .u-bar { width: 10px; height: 5px; background: #333; border-radius: 2px; }
         .u-bar.fill { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
 
-        /* Notification */
+        /* Уведомления */
         .notif { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; box-shadow: 0 0 25px var(--neon-green); text-transform: uppercase; text-align: center;}
         .notif.show { top: env(safe-area-inset-top, 20px); }
 
-        /* Daily Bonus */
+        /* Ежедневный бонус */
         .daily-box { display: none; background: rgba(0,0,0,0.9); position: absolute; inset: 0; z-index: 150; align-items: center; justify-content: center; backdrop-filter: blur(10px);}
         .daily-panel { background: #111; border: 2px solid var(--neon-yellow); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 40px rgba(255, 221, 0, 0.4); max-width: 80%;}
         .daily-reward { font-size: 44px; color: var(--neon-yellow); text-shadow: 0 0 25px var(--neon-yellow); font-weight: bold; margin: 20px 0;}
@@ -134,7 +134,7 @@
 <!-- Главное меню -->
 <div id="screen-start" class="screen active">
     <div class="panel">
-        <h1 id="main-title">CYBER<br>RUNNER</h1>
+        <h1 id="main-title">КИБЕР<br>РАННЕР</h1>
         <p id="high-score" style="color: var(--neon-blue); letter-spacing: 2px; margin-bottom: 15px; font-weight: bold;">РЕКОРД: 0</p>
         
         <div class="mission-box" id="mission-ui">
@@ -158,7 +158,7 @@
         
         <div class="shop-tabs">
             <div class="shop-tab active" id="tab-skins">Кубы</div>
-            <div class="shop-tab" id="tab-upgrades">Апгрейды</div>
+            <div class="shop-tab" id="tab-upgrades">Улучшения</div>
         </div>
 
         <div class="shop-container">
@@ -195,7 +195,7 @@
 <div id="notification" class="notif">ЗАДАНИЕ ВЫПОЛНЕНО! +100 🪙</div>
 
 <script>
-/** * DYNAMIC SHADERS (ОБНОВЛЕНЫ ПОД РЕФЕРЕНС) */
+/** * ДИНАМИЧЕСКИЕ ШЕЙДЕРЫ (ОБНОВЛЕНЫ ПОД РЕФЕРЕНС) */
 const SHADERS = {
     floorV: `
         varying vec2 vUv; varying float vFog; uniform float uTime;
@@ -292,7 +292,7 @@ class GameEngine {
         this.targetBiome = 0;
         this.activeTab = 'skins';
         
-        // Easter Eggs tracking
+        // Отслеживание пасхалок
         this.titleClicks = 0;
         this.lastJumpTime = 0;
         this.barrelRollActive = false;
@@ -315,7 +315,7 @@ class GameEngine {
     async initYandex() {
         this.updateLoading(30);
         try {
-            if (typeof YaGames === 'undefined') throw new Error('No Yandex SDK');
+            if (typeof YaGames === 'undefined') throw new Error('Нет Yandex SDK');
             const initPromise = YaGames.init();
             const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 2000));
             this.ysdk = await Promise.race([initPromise, timeoutPromise]);
@@ -334,7 +334,7 @@ class GameEngine {
                     this.upgrades = data.upgrades || { magnet: 0, shield: 0 };
                     if (data.mission) this.mission = data.mission;
                 }
-            } catch (e) { console.warn("Cloud error"); }
+            } catch (e) { console.warn("Ошибка облачного сохранения"); }
             
             this.finishLoading();
         } catch(e) { this.finishLoading(); }
@@ -906,12 +906,11 @@ class GameEngine {
     slide() {
         if (this.state !== 'PLAYING' || this.isSliding) return;
         
-        // ПАСХАЛКА 2: DO A BARREL ROLL
-        // Если сделали подкат сразу после прыжка (меньше 400 мс)
+        // ПАСХАЛКА 2: БОЧКА
         if (this.isJumping && performance.now() - this.lastJumpTime < 400 && !this.barrelRollActive) {
             this.barrelRollActive = true;
             this.combo += 2;
-            this.showNotification("DO A BARREL ROLL! КОМБО +2");
+            this.showNotification("СДЕЛАЙ БОЧКУ! КОМБО +2");
             this.playSfx(1000, 'square', 0.4, 0.2);
             setTimeout(() => { 
                 this.barrelRollActive = false; 
@@ -972,7 +971,7 @@ class GameEngine {
                 callbacks: {
                     onOpen: () => { this.pauseAudioForAd(); },
                     onClose: () => { this.resumeAudioAfterAd(); this.lastAdTime = Date.now(); },
-                    onError: (e) => { this.resumeAudioAfterAd(); }
+                    onError: (e) => { this.resumeAudioAfterAd(); console.log('Ошибка рекламы', e); }
                 } 
             });
         }
@@ -1204,8 +1203,6 @@ class GameEngine {
             this.score += 0.1 * (this.speed/10) * this.combo;
             
             // ПРОГРЕССИВНАЯ СКОРОСТЬ
-            // Базовая скорость 18, плюс микро-ускорение, плюс ускорение от текущих очков.
-            // Скорость плавно растет и может стать по-настоящему сумасшедшей.
             this.speed += 0.0015 + (this.score * 0.0000005);
             
             this.camera.fov = this.baseFov + (this.speed-18)*1.2;
