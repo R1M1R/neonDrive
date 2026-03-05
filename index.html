@@ -25,7 +25,7 @@
         body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; user-select: none; touch-action: none; overscroll-behavior: none; }
         
         /* Визуальные эффекты */
-        #vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(10,0,20,0.9) 100%); pointer-events: none; z-index: 1; }
+        #vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(10,0,20,0.95) 100%); pointer-events: none; z-index: 1; }
         
         #speed-lines { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.5s; background-image: repeating-linear-gradient(90deg, transparent 0%, rgba(0, 255, 255, 0.05) 1%, transparent 2%); background-size: 200% 100%; animation: moveLines 0.3s linear infinite; mix-blend-mode: screen; }
         @keyframes moveLines { 0% { background-position: 0 0; } 100% { background-position: 100% 0; } }
@@ -195,7 +195,7 @@
 <div id="notification" class="notif">ЗАДАНИЕ ВЫПОЛНЕНО! +100 🪙</div>
 
 <script>
-/** * DYNAMIC SHADERS */
+/** * DYNAMIC SHADERS (ОБНОВЛЕНЫ ПОД РЕФЕРЕНС) */
 const SHADERS = {
     floorV: `
         varying vec2 vUv; varying float vFog; uniform float uTime;
@@ -210,19 +210,27 @@ const SHADERS = {
         uniform vec3 uGridColor; uniform vec3 uBgColor;
         void main() {
             vec2 uv = vUv; uv.y += uTime * uSpeed * 0.1;
-            // Усиленная, более четкая сетка как на картинке
-            float gridX = step(0.96, fract(uv.x * 10.0));
-            float gridY = step(0.96, fract(uv.y * 20.0));
+            
+            // Основная сетка (Крупная)
+            float gridX = step(0.97, fract(uv.x * 12.0));
+            float gridY = step(0.97, fract(uv.y * 24.0));
             float grid = max(gridX, gridY);
+
+            // Вторичная сетка (Мелкая, менее яркая)
+            float subGridX = step(0.98, fract(uv.x * 24.0));
+            float subGridY = step(0.98, fract(uv.y * 48.0));
+            float subGrid = max(subGridX, subGridY) * 0.3;
             
-            vec3 color = mix(uBgColor, uGridColor, grid);
-            // Добавляем свечение на пересечениях
-            color += uGridColor * (gridX * gridY) * 2.0; 
+            float totalGrid = max(grid, subGrid);
+            vec3 color = mix(uBgColor, uGridColor, totalGrid);
             
-            // Эффект сканлайнов для ретро стиля
+            // Сильное свечение на пересечениях основной сетки (эффект Bloom)
+            color += uGridColor * (gridX * gridY) * 3.0; 
+            
+            // Эффект сканлайнов
             color -= 0.05 * sin(uv.y * 800.0 + uTime * 15.0); 
             
-            float fog = smoothstep(15.0, 80.0, vFog);
+            float fog = smoothstep(20.0, 100.0, vFog);
             gl_FragColor = vec4(mix(color, uBgColor, fog), 1.0);
         }
     `,
@@ -235,10 +243,12 @@ const SHADERS = {
             if (d > 0.5) discard;
             float pulse = 1.0 + 0.03 * sin(uTime * 3.0);
             vec3 color = mix(uSunBot, uSunTop, vUv.y);
-            float stripes = step(0.12, fract(vUv.y * 14.0 - uTime * 0.4));
+            
+            // Более плотные полосы на солнце
+            float stripes = step(0.15, fract(vUv.y * 20.0 - uTime * 0.5));
             if (vUv.y < 0.5) color *= stripes;
             
-            // Яркое свечение краев солнца
+            // Легкое свечение краев
             float glow = smoothstep(0.48, 0.5, d);
             color += vec3(1.0) * glow * 0.5;
 
@@ -247,9 +257,9 @@ const SHADERS = {
     `
 };
 
-// Палитры Биомов (Первая палитра точно как на референсе)
+// Палитры Биомов (Точно как на референсе)
 const PALETTES = [
-    { grid: 0x00ffff, bg: 0x110022, sTop: 0xffdd00, sBot: 0xff0077 }, // Референс: Cyan сетка, фиолетовый космос, желто-розовое солнце
+    { grid: 0x00ffff, bg: 0x0a001a, sTop: 0xffdd00, sBot: 0xff0077 }, // Референс: Cyan сетка, темный космос, желто-розовое солнце
     { grid: 0x00ff66, bg: 0x051005, sTop: 0x00ffff, sBot: 0x00ff66 }, // Токсичный
     { grid: 0xff0033, bg: 0x1a0000, sTop: 0xff0077, sBot: 0xff0033 }, // Инферно
     { grid: 0xffffff, bg: 0x000000, sTop: 0xffffff, sBot: 0x555555 }  // Пустота
@@ -284,6 +294,8 @@ class GameEngine {
         this.musicNextNoteTime = 0;
         this.musicStep = 0;
         this.masterGain = null;
+        
+        this.baseFov = 70; // Адаптивный FOV
 
         this.initLogic();
         this.initThree();
@@ -455,7 +467,7 @@ class GameEngine {
         
         this.activeObstacles = [];
         this.activeCoins = [];
-        this.scenery = []; // Для столбов и декора
+        this.scenery = []; 
         this.engineParticles = [];
         this.pool = { obstacles: [], coins: [], magnets: [], shields: [], scenery: [] };
     }
@@ -470,24 +482,44 @@ class GameEngine {
         canvas.width = 256; canvas.height = 256;
         const ctx = canvas.getContext('2d');
         const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)');
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        grad.addColorStop(0.3, 'rgba(255, 255, 255, 0.5)');
         grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 256, 256);
-        const tex = new THREE.CanvasTexture(canvas);
-        return tex;
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    // НАСТРОЙКА АДАПТИВНОЙ КАМЕРЫ (Чтобы байк не срезался на телефонах)
+    updateCameraFraming() {
+        const aspect = window.innerWidth / window.innerHeight;
+        if (aspect < 1.0) {
+            // Для вертикальных экранов - оттягиваем камеру и расширяем FOV
+            this.baseFov = 75 * (1.0 / aspect) * 0.6; // Магическое число для идеального кадрирования
+            this.camera.position.set(0, 4.5, 8.5); 
+            this.camera.lookAt(0, 1.5, -2);
+        } else {
+            // Для ПК и горизонтальных
+            this.baseFov = 70;
+            this.camera.position.set(0, 4.0, 8.0);
+            this.camera.lookAt(0, 1.5, -2);
+        }
+        this.camera.fov = this.baseFov;
+        this.camera.aspect = aspect;
+        this.camera.updateProjectionMatrix();
     }
 
     initThree() {
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(PALETTES[0].bg, 10, 120);
+        this.scene.fog = new THREE.Fog(PALETTES[0].bg, 15, 150);
         
         this.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         document.body.appendChild(this.renderer.domElement);
+        
+        this.updateCameraFraming();
 
         // Пол
         this.floorMat = new THREE.ShaderMaterial({
@@ -498,11 +530,11 @@ class GameEngine {
             },
             vertexShader: SHADERS.floorV, fragmentShader: SHADERS.floorF
         });
-        const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 250), this.floorMat);
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 300), this.floorMat);
         floor.rotation.x = -Math.PI / 2;
         this.scene.add(floor);
 
-        // Солнце
+        // Солнце (Больше и выше как на референсе)
         this.sunMat = new THREE.ShaderMaterial({
             uniforms: { 
                 uTime: {value: 0},
@@ -511,54 +543,67 @@ class GameEngine {
             },
             vertexShader: SHADERS.sunV, fragmentShader: SHADERS.sunF, transparent: true
         });
-        const sun = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), this.sunMat);
-        sun.position.set(0, 20, -100);
+        const sun = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), this.sunMat);
+        sun.position.set(0, 30, -150);
         this.scene.add(sun);
 
-        // ГРУППА ИГРОКА (КИБЕР-КУБ)
+        // ГРУППА ИГРОКА: ДЕТАЛИЗИРОВАННЫЙ КИБЕР-КУБ (Как на картинке)
         this.player = new THREE.Group();
         
-        // 1. Внутренний темный куб
-        const bodyGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-        this.playerBaseMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.2, metalness: 0.8 });
+        // Внутреннее темное ядро
+        const bodyGeo = new THREE.BoxGeometry(1.0, 1.0, 1.0);
+        this.playerBaseMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.1, metalness: 0.9 });
         const bodyMesh = new THREE.Mesh(bodyGeo, this.playerBaseMat);
         
-        // 2. Светящийся каркас куба (Wireframe/Edges)
-        const edges = new THREE.EdgesGeometry(bodyGeo);
+        // Внешний светящийся каркас (Wireframe)
+        const frameGeo = new THREE.BoxGeometry(1.05, 1.05, 1.05);
+        const edges = new THREE.EdgesGeometry(frameGeo);
         this.playerEdgeMat = new THREE.LineBasicMaterial({ color: this.getSkinColor(), linewidth: 2 });
         this.playerLines = new THREE.LineSegments(edges, this.playerEdgeMat);
         bodyMesh.add(this.playerLines);
 
-        // 3. Неоновые боковые кольца (колеса)
-        const wheelGeo = new THREE.TorusGeometry(0.35, 0.08, 8, 24);
+        // Доп. внутренний каркас для сложности детализации
+        const innerFrameGeo = new THREE.BoxGeometry(0.8, 1.1, 0.8);
+        const innerEdges = new THREE.EdgesGeometry(innerFrameGeo);
+        this.playerInnerLines = new THREE.LineSegments(innerEdges, this.playerEdgeMat);
+        bodyMesh.add(this.playerInnerLines);
+
+        // Боковые кольца-колеса
+        const wheelGeo = new THREE.TorusGeometry(0.35, 0.1, 8, 24);
         this.playerWheelMat = new THREE.MeshBasicMaterial({ color: this.getSkinColor() });
         this.wheelL = new THREE.Mesh(wheelGeo, this.playerWheelMat);
-        this.wheelL.position.set(-0.65, -0.2, 0);
+        this.wheelL.position.set(-0.55, -0.3, 0);
         this.wheelL.rotation.y = Math.PI / 2;
         this.wheelR = new THREE.Mesh(wheelGeo, this.playerWheelMat);
-        this.wheelR.position.set(0.65, -0.2, 0);
+        this.wheelR.position.set(0.55, -0.3, 0);
         this.wheelR.rotation.y = Math.PI / 2;
         
+        // Внутренние диски колес
+        const discGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16);
+        const discMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const discL = new THREE.Mesh(discGeo, discMat); discL.rotation.z = Math.PI/2; this.wheelL.add(discL);
+        const discR = new THREE.Mesh(discGeo, discMat); discR.rotation.z = Math.PI/2; this.wheelR.add(discR);
+
         bodyMesh.add(this.wheelL);
         bodyMesh.add(this.wheelR);
-        bodyMesh.position.y = 0.6; // Поднимаем над полом
+        bodyMesh.position.y = 0.65; 
         
         this.player.add(bodyMesh);
 
         // Щит
         this.shieldMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(1.5, 16, 16),
+            new THREE.SphereGeometry(1.6, 16, 16),
             new THREE.MeshBasicMaterial({ color: 0x00ff66, transparent: true, opacity: 0.3, wireframe: true })
         );
-        this.shieldMesh.position.y = 0.6;
+        this.shieldMesh.position.y = 0.65;
         this.shieldMesh.visible = false;
         this.player.add(this.shieldMesh);
 
-        // Отражение на полу (Glow Patch)
+        // Мощное свечение под кубом
         const glowTex = this.createFloorGlowTexture();
         this.floorGlow = new THREE.Mesh(
-            new THREE.PlaneGeometry(5, 5),
-            new THREE.MeshBasicMaterial({ color: this.getSkinColor(), transparent: true, opacity: 0.6, map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false })
+            new THREE.PlaneGeometry(6, 6),
+            new THREE.MeshBasicMaterial({ color: this.getSkinColor(), transparent: true, opacity: 0.8, map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false })
         );
         this.floorGlow.rotation.x = -Math.PI / 2;
         this.floorGlow.position.y = 0.05;
@@ -566,21 +611,19 @@ class GameEngine {
 
         this.scene.add(this.player);
 
-        // Свет
-        this.pLight = new THREE.PointLight(this.getSkinColor(), 2, 10);
-        this.pLight.position.set(0, 1.5, 0);
+        // Динамический свет
+        this.pLight = new THREE.PointLight(this.getSkinColor(), 3, 15);
+        this.pLight.position.set(0, 1.0, 0);
         this.player.add(this.pLight);
 
-        // Звездный фон
+        // Звездный фон и космическая пыль
         const starGeo = new THREE.BufferGeometry();
         const starPos = [];
-        for(let i=0; i<400; i++) starPos.push((Math.random()-0.5)*150, Math.random()*60, (Math.random()-0.5)*150);
+        for(let i=0; i<600; i++) starPos.push((Math.random()-0.5)*200, Math.random()*100, (Math.random()-0.5)*250);
         starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-        this.stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8 }));
+        this.stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.2, transparent: true, opacity: 0.9 }));
         this.scene.add(this.stars);
 
-        this.camera.position.set(0, 3.5, 7);
-        this.camera.lookAt(0, 1, -2);
         this.scene.add(new THREE.AmbientLight(0x222222));
     }
 
@@ -590,7 +633,7 @@ class GameEngine {
         const skin = this.skins.find(s => s.id === this.currentSkin);
         const hex = skin.color;
         
-        // Обновляем цвета всех частей Кибер-Куба
+        // Обновляем цвета
         this.playerEdgeMat.color.setHex(hex);
         this.playerWheelMat.color.setHex(hex);
         this.floorGlow.material.color.setHex(hex);
@@ -759,7 +802,6 @@ class GameEngine {
     // --- END MUSIC GENERATOR ---
 
     bindEvents() {
-        // УЛУЧШЕННЫЙ МГНОВЕННЫЙ СВАЙП ДЛЯ МОБИЛОК
         let sx = null, sy = null;
         let swipeProcessed = false;
 
@@ -770,13 +812,13 @@ class GameEngine {
             this.initAudioContext();
         });
 
-        // Реагируем на свайп прямо в процессе ведения пальца (гораздо отзывчивее!)
+        // МГНОВЕННЫЙ СВАЙП: Реагируем во время движения пальца
         window.addEventListener('pointermove', e => {
             if (!sx || !sy || swipeProcessed) return;
             
             const dx = e.clientX - sx;
             const dy = e.clientY - sy;
-            const threshold = 35; // Порог свайпа
+            const threshold = 30; // Чувствительность свайпа
 
             if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
                 if (Math.abs(dx) > Math.abs(dy)) {
@@ -785,7 +827,7 @@ class GameEngine {
                     if (dy < -threshold) this.jump();
                     if (dy > threshold) this.slide();
                 }
-                swipeProcessed = true; // Ждем пока игрок отпустит палец для следующего свайпа
+                swipeProcessed = true; // Блокируем повторные срабатывания до отпускания пальца
             }
         });
 
@@ -823,8 +865,7 @@ class GameEngine {
         };
 
         window.addEventListener('resize', () => {
-            this.camera.aspect = window.innerWidth/window.innerHeight;
-            this.camera.updateProjectionMatrix();
+            this.updateCameraFraming();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
         document.addEventListener('visibilitychange', () => {
@@ -850,7 +891,7 @@ class GameEngine {
         if (this.state !== 'PLAYING' || this.isSliding) return;
         this.isSliding = true; 
         this.player.scale.y = 0.4;
-        this.floorGlow.scale.y = 2.5; // Компенсация скейла
+        this.floorGlow.scale.y = 2.5; // Компенсация скейла свечения
         setTimeout(() => { 
             this.isSliding = false; 
             this.player.scale.y = 1; 
@@ -917,24 +958,23 @@ class GameEngine {
     }
 
     spawnScenery() {
-        // Спавн неоновых столбов по бокам (как на картинке)
         if (Math.random() < 0.05) {
             const side = Math.random() > 0.5 ? 1 : -1;
             let group = this.pool.scenery.pop();
             
             if (!group) {
                 group = new THREE.Group();
-                const post = new THREE.Mesh(new THREE.BoxGeometry(0.3, 8, 0.3), new THREE.MeshStandardMaterial({color: 0x111111}));
-                post.position.y = 4;
-                const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.2, 0.3), new THREE.MeshBasicMaterial({color: 0xffffff}));
-                lamp.position.set(-side * 0.5, 8, 0);
+                const post = new THREE.Mesh(new THREE.BoxGeometry(0.3, 10, 0.3), new THREE.MeshStandardMaterial({color: 0x111111}));
+                post.position.y = 5;
+                const lamp = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, 0.4), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                lamp.position.set(-side * 0.8, 10, 0);
                 group.add(post); group.add(lamp);
-                group.lamp = lamp; // Сохраняем ссылку для смены цвета
+                group.lamp = lamp; 
                 this.scene.add(group);
             }
             
             group.lamp.material.color.setHex(PALETTES[this.targetBiome].grid);
-            group.position.set(side * 8, 0, -120);
+            group.position.set(side * 8, 0, -150);
             group.visible = true;
             this.scenery.push(group);
         }
@@ -945,7 +985,7 @@ class GameEngine {
 
         if (Math.random() < 0.02) {
             let o = this.pool.obstacles.pop() || new THREE.Mesh(
-                new THREE.BoxGeometry(2, 1, 1.5),
+                new THREE.BoxGeometry(2, 1.2, 1.5),
                 new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0xff00c8, emissiveIntensity: 1 })
             );
             const isTall = Math.random() > 0.7;
@@ -961,7 +1001,7 @@ class GameEngine {
                 o.targetLane = (Math.floor(Math.random()*3)-1);
             }
 
-            o.position.set(o.targetLane * this.laneWidth, o.scale.y/2, -100);
+            o.position.set(o.targetLane * this.laneWidth, o.scale.y/2, -150);
             
             if (o.isMover) {
                 let startLane = o.targetLane === 0 ? 1 : 0; 
@@ -976,7 +1016,7 @@ class GameEngine {
                 new THREE.TorusGeometry(0.4, 0.1, 8, 16),
                 new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2 })
             );
-            c.position.set((Math.floor(Math.random()*3)-1)*this.laneWidth, 1, -100);
+            c.position.set((Math.floor(Math.random()*3)-1)*this.laneWidth, 1, -150);
             c.visible = true; c.type = 'coin'; this.scene.add(c); this.activeCoins.push(c);
         }
 
@@ -985,7 +1025,7 @@ class GameEngine {
                 new THREE.OctahedronGeometry(0.5),
                 new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00f3ff, emissiveIntensity: 2 })
             );
-            m.position.set((Math.floor(Math.random()*3)-1)*this.laneWidth, 1, -100);
+            m.position.set((Math.floor(Math.random()*3)-1)*this.laneWidth, 1, -150);
             m.visible = true; m.type = 'magnet'; this.scene.add(m); this.activeCoins.push(m);
         }
 
@@ -995,7 +1035,7 @@ class GameEngine {
                 new THREE.IcosahedronGeometry(0.5, 0),
                 new THREE.MeshStandardMaterial({ color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 2, wireframe: true })
             );
-            s.position.set((Math.floor(Math.random()*3)-1)*this.laneWidth, 1, -100);
+            s.position.set((Math.floor(Math.random()*3)-1)*this.laneWidth, 1, -150);
             s.visible = true; s.type = 'shield'; this.scene.add(s); this.activeCoins.push(s);
         }
     }
@@ -1086,18 +1126,22 @@ class GameEngine {
         this.activeObstacles.forEach(o => { if(o.position.z > -20 && o.position.z < 10) o.visible = false; });
     }
 
+    // ИСКРЫ ИЗ-ПОД КОЛЕС (Эффект трения как на обложке)
     spawnEngineSparks() {
-        // Непрерывные искры снизу (как на картинке трение о сетку)
         if (!this.isJumping) {
-            for(let i=0; i<2; i++) {
+            for(let i=0; i<3; i++) {
                 const p = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.05, 0.05, 0.3), 
+                    new THREE.BoxGeometry(0.08, 0.08, 0.4), 
                     new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending })
                 );
+                const side = Math.random() > 0.5 ? 1 : -1;
                 p.position.copy(this.player.position);
-                p.position.y = 0.1; // Почти на полу
-                p.position.x += (Math.random()-0.5) * 1.2;
-                p.velocity = new THREE.Vector3((Math.random()-0.5)*0.3, Math.random()*0.1, Math.random()*0.5 + 0.2);
+                p.position.y = 0.05; // У самого пола
+                p.position.x += side * 0.6; // Из-под боковых колес
+                p.position.z += 0.5; // Смещаем назад
+                
+                // Вылетают назад и в стороны
+                p.velocity = new THREE.Vector3(side * (Math.random()*0.3 + 0.1), Math.random()*0.1, Math.random()*0.6 + 0.3);
                 this.scene.add(p);
                 this.engineParticles.push(p);
             }
@@ -1115,7 +1159,8 @@ class GameEngine {
             this.score += 0.1 * (this.speed/10) * this.combo;
             this.speed = Math.min(38, this.speed + 0.002);
             
-            this.camera.fov = 70 + (this.speed-18)*1.2;
+            // Расчет FOV с учетом скорости
+            this.camera.fov = this.baseFov + (this.speed-18)*1.0;
             this.camera.updateProjectionMatrix();
 
             const newBiome = Math.floor(this.score / 2000) % PALETTES.length;
@@ -1145,22 +1190,22 @@ class GameEngine {
             }
 
             const targetX = this.lane * this.laneWidth;
-            this.player.position.x += (targetX - this.player.position.x) * 0.15;
+            this.player.position.x += (targetX - this.player.position.x) * 0.18; // Сделали перестроение чуть резче
             
-            // Наклон куба и камеры
+            // Наклон куба и камеры при перестроении
             const tilt = (this.player.position.x - targetX) * 0.12;
             this.player.rotation.z = tilt;
             this.player.rotation.y = tilt * 0.3;
             this.camera.rotation.z = tilt * -0.05; 
             
             // Вращение колес куба
-            this.wheelL.rotation.z -= this.speed * 0.02;
-            this.wheelR.rotation.z -= this.speed * 0.02;
+            this.wheelL.rotation.x -= this.speed * 0.02;
+            this.wheelR.rotation.x -= this.speed * 0.02;
 
             if (this.isJumping) {
                 this.player.position.y += this.jumpV;
                 this.jumpV -= 0.012;
-                if (this.player.position.y <= 0.3) { this.player.position.y = 0.3; this.isJumping = false; }
+                if (this.player.position.y <= 0.65) { this.player.position.y = 0.65; this.isJumping = false; }
             }
 
             this.spawn();
@@ -1181,16 +1226,16 @@ class GameEngine {
                 if (!o.visible) return;
                 o.position.z += this.speed * 0.05;
 
-                if (o.isMover && o.position.z > -40 && o.position.z < -20) {
+                if (o.isMover && o.position.z > -60 && o.position.z < -20) {
                     const oTargetX = o.targetLane * this.laneWidth;
-                    o.position.x += (oTargetX - o.position.x) * 0.1;
+                    o.position.x += (oTargetX - o.position.x) * 0.08;
                     o.rotation.y = (oTargetX - o.position.x) * 0.1; 
                 } else if (o.isMover) { o.rotation.y = 0; }
 
-                if (Math.abs(o.position.z - this.player.position.z) < 1.2 && Math.abs(o.position.x - this.player.position.x) < 1.2) {
+                if (Math.abs(o.position.z - this.player.position.z) < 1.4 && Math.abs(o.position.x - this.player.position.x) < 1.4) {
                     let hit = false;
                     if (o.isTall && !this.isSliding) hit = true;
-                    else if (!o.isTall && this.player.position.y < 1.2) hit = true;
+                    else if (!o.isTall && this.player.position.y < 1.5) hit = true;
                     
                     if (hit) {
                         if (this.hasShield) {
@@ -1251,7 +1296,7 @@ class GameEngine {
                 const p = this.engineParticles[i];
                 p.position.add(p.velocity);
                 p.scale.multiplyScalar(0.85);
-                p.material.opacity -= 0.05; // Искры гаснут
+                p.material.opacity -= 0.05; 
                 if (p.scale.x < 0.05 || p.material.opacity <= 0) { this.scene.remove(p); this.engineParticles.splice(i, 1); }
             }
 
