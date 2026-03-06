@@ -33,7 +33,7 @@
         #ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; }
         
         .hud { padding: calc(10px + var(--safe-top)) 15px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
-        .hud-left { display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 65px); }
+        .hud-left { display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 65px); transition: opacity 0.5s ease-in-out; opacity: 0; } 
         .hud-item { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); border: 1px solid var(--neon-blue); padding: 4px 8px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); min-width: 50px; text-align: center; transition: border-color 1s, box-shadow 1s; }
         .val { font-size: 16px; font-weight: 900; font-family: 'Courier New', monospace; display: block; color: var(--neon-blue); transition: color 1s; text-shadow: 0 0 8px var(--neon-blue); }
         .lbl { font-size: 8px; text-transform: uppercase; opacity: 0.8; letter-spacing: 0.5px; }
@@ -91,8 +91,27 @@
         .u-bar { width: 10px; height: 5px; background: #333; border-radius: 2px; }
         .u-bar.fill { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
 
-        .notif { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; box-shadow: 0 0 25px var(--neon-green); text-transform: uppercase; text-align: center; pointer-events: none;}
-        .notif.show { top: env(safe-area-inset-top, 20px); }
+        /* ИСПРАВЛЕНИЕ: Уведомление теперь всегда под шторкой и поверх всего */
+        .notif { 
+            position: fixed; 
+            top: -100px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: var(--neon-green); 
+            color: #000; 
+            padding: 12px 25px; 
+            border-radius: 30px; 
+            font-weight: bold; 
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            z-index: 2000; 
+            box-shadow: 0 0 25px var(--neon-green); 
+            text-transform: uppercase; 
+            text-align: center; 
+            pointer-events: none;
+            width: max-content;
+            max-width: 90vw;
+        }
+        .notif.show { top: calc(env(safe-area-inset-top, 0px) + 40px); }
 
         .daily-box { display: none; background: rgba(0,0,0,0.9); position: absolute; inset: 0; z-index: 150; align-items: center; justify-content: center; backdrop-filter: blur(10px);}
         .daily-panel { background: #111; border: 2px solid var(--neon-yellow); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 40px rgba(255, 221, 0, 0.4); max-width: 80%;}
@@ -114,7 +133,7 @@
 
 <div id="ui">
     <div class="hud">
-        <div class="hud-left">
+        <div class="hud-left" id="hud-left">
             <div class="hud-item"><span class="lbl" id="lbl-dist">Дистанция</span><span id="score" class="val">0</span></div>
             <div class="hud-item" style="border-color: var(--neon-pink);"><span class="lbl" id="lbl-coins">Кредиты</span><span id="coins" class="val">0</span></div>
             <div class="hud-item" style="border-color: #fff;"><span class="lbl" id="lbl-level">Ур.</span><span id="level-val" class="val" style="color:#fff;">1</span></div>
@@ -201,10 +220,10 @@
     </div>
 </div>
 
+<!-- Это само уведомление, которое теперь будет показываться корректно -->
 <div id="notification" class="notif">ЗАДАНИЕ ВЫПОЛНЕНО! +100 🪙</div>
 
 <script>
-// --- ЛОКАЛИЗАЦИЯ (Всё на русском, если язык RU) ---
 const I18N = {
     ru: {
         loading: "СИНХРОНИЗАЦИЯ", dist: "Дистанция", credits: "Кредиты", magnet: "🧲 МАГНИТ", shield: "🛡️ ЗАЩИТА", lvl: "Ур.", combo: "Комбо",
@@ -287,13 +306,12 @@ const LEVELS = [
             en: "You have reached the Glitch Core. Physics do not apply here. The matrix is collapsing. Survive this chaos to become a legend." 
         }
     },
-    // ИСПРАВЛЕНИЕ: Добавлен 5-й финальный "Бесконечный" уровень
     {
         id: 4,
         name: { ru: "СИНГУЛЯРНОСТЬ", en: "SINGULARITY" },
-        pal: { grid: 0xaa00ff, bg: 0x000000, sTop: 0xffffff, sBot: 0xaa00ff }, // Фиолетово-белая палитра
+        pal: { grid: 0xaa00ff, bg: 0x000000, sTop: 0xffffff, sBot: 0xaa00ff },
         targetScore: 20000,
-        obsShape: 'torusKnot', // Сумасшедшая геометрия (вращающиеся узлы)
+        obsShape: 'torusKnot', 
         music: { bpm: 0.05, baseNotes: [130.81, 155.56, 174.61, 196.00, 130.81, 196.00, 174.61, 155.56, 261.63, 196.00, 174.61, 155.56, 130.81, 65.41, 65.41, 65.41], filterFreq: 3000 },
         story: { 
             ru: "Вы превзошли пределы системы. Дальше нет программного кода. Только чистая скорость и бесконечность. Посмотрим, как долго вы продержитесь в Сингулярности.", 
@@ -330,6 +348,9 @@ class GameEngine {
         this.masterGain = null;
         
         this.baseFov = 70;
+        this.introTimer = 0;
+        
+        this.lastTime = 0;
 
         this.initLogic();
         this.initThree();
@@ -550,6 +571,7 @@ class GameEngine {
         
         this.currentLevelIdx = 0;
         this.targetBiome = 0;
+        this.jumpV = 0;
         
         this.activeObstacles = [];
         this.activeCoins = [];
@@ -562,7 +584,13 @@ class GameEngine {
         document.getElementById('high-score').innerText = this.hiScore;
         document.getElementById('coins').innerText = this.coins;
         document.getElementById('shop-coins').innerText = this.coins;
-        document.getElementById('level-val').innerText = (this.currentLevelIdx + 1);
+        
+        const t = I18N[this.lang] || I18N['en'];
+        if (this.currentLevelIdx === LEVELS.length - 1) {
+            document.getElementById('level-val').innerText = "∞"; 
+        } else {
+            document.getElementById('level-val').innerText = (this.currentLevelIdx + 1);
+        }
     }
 
     createFloorGlowTexture() {
@@ -582,13 +610,19 @@ class GameEngine {
         const aspect = window.innerWidth / window.innerHeight;
         if (aspect < 1.0) {
             this.baseFov = 75 * (1.0 / aspect) * 0.6; 
-            this.camera.position.set(0, 4.5, 8.5); 
-            this.camera.lookAt(0, 1.5, -2);
+            this.targetCamY = 4.5;
+            this.targetCamZ = 8.5;
         } else {
             this.baseFov = 70;
-            this.camera.position.set(0, 4.0, 8.0);
+            this.targetCamY = 4.0;
+            this.targetCamZ = 8.0;
+        }
+        
+        if (this.state !== 'INTRO') {
+            this.camera.position.set(0, this.targetCamY, this.targetCamZ); 
             this.camera.lookAt(0, 1.5, -2);
         }
+        
         this.camera.fov = this.baseFov;
         this.camera.aspect = aspect;
         this.camera.updateProjectionMatrix();
@@ -675,6 +709,7 @@ class GameEngine {
         this.shieldMesh.visible = false;
         this.player.add(this.shieldMesh);
 
+        // ИСПРАВЛЕНИЕ: Добавлен THREE перед MeshBasicMaterial
         const glowTex = this.createFloorGlowTexture();
         this.floorGlow = new THREE.Mesh(
             new THREE.PlaneGeometry(6, 6),
@@ -874,7 +909,7 @@ class GameEngine {
     }
 
     updateProceduralMusic() {
-        if (!this.audioCtx || this.isMuted || this.state !== 'PLAYING') return;
+        if (!this.audioCtx || this.isMuted || (this.state !== 'PLAYING' && this.state !== 'INTRO')) return;
         const beatLen = LEVELS[this.currentLevelIdx].music.bpm; 
         const lookahead = 0.1;
         while (this.musicNextNoteTime < this.audioCtx.currentTime + lookahead) {
@@ -1001,7 +1036,7 @@ class GameEngine {
         });
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.audioCtx) this.audioCtx.suspend();
-            else if (!document.hidden && this.audioCtx && !this.isMuted && (this.state === 'PLAYING' || this.state === 'STORY')) this.audioCtx.resume();
+            else if (!document.hidden && this.audioCtx && !this.isMuted && (this.state === 'PLAYING' || this.state === 'STORY' || this.state === 'INTRO')) this.audioCtx.resume();
         });
     }
 
@@ -1065,7 +1100,6 @@ class GameEngine {
         const lvlName = levelData.name[this.lang] || levelData.name['en'];
         const storyText = levelData.story[this.lang] || levelData.story['en'];
         
-        // Меняем title на "Сектор достигнут", чтобы было понятно, что происходит
         document.getElementById('story-title').innerText = t.sector_reached + ": " + lvlName;
         document.getElementById('story-text').innerText = storyText;
         
@@ -1079,7 +1113,6 @@ class GameEngine {
         document.getElementById('screen-story').classList.remove('active');
         document.getElementById('speed-lines').style.opacity = '1';
         
-        this.speed += 3;
         this.playSfx(400, 'square', 0.5, 0.3);
 
         const flash = document.getElementById('level-flash');
@@ -1090,7 +1123,6 @@ class GameEngine {
         const t = I18N[this.lang] || I18N['en'];
         const lvlName = LEVELS[this.currentLevelIdx].name[this.lang] || LEVELS[this.currentLevelIdx].name['en'];
         
-        // Если это последний уровень (Бесконечность), просто выводим его название
         if (this.currentLevelIdx === LEVELS.length - 1) {
             document.getElementById('lb-title').innerText = "";
         } else {
@@ -1117,7 +1149,7 @@ class GameEngine {
         
         const t = I18N[this.lang] || I18N['en'];
         if (lvlIdx === LEVELS.length - 1) {
-            document.getElementById('level-val').innerText = "∞"; // Бесконечность на последнем уровне
+            document.getElementById('level-val').innerText = "∞"; 
         } else {
             document.getElementById('level-val').innerText = (lvlIdx + 1);
         }
@@ -1129,7 +1161,9 @@ class GameEngine {
 
     start() {
         if (this.audioCtx && this.audioCtx.state === 'suspended' && !this.isMuted) this.audioCtx.resume();
-        this.state = 'PLAYING';
+        
+        this.state = 'INTRO';
+        this.introStartTime = performance.now() * 0.001;
         this.speed = 15;
         this.score = 0;
         this.runCoins = 0;
@@ -1146,8 +1180,11 @@ class GameEngine {
             this.musicStep = 0;
         }
 
-        document.getElementById('speed-lines').style.opacity = '1';
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('hud-left').style.opacity = '0'; 
+
+        this.camera.position.set(0, 30, 30);
+        this.player.position.y = 20;
     }
 
     toMenu() {
@@ -1196,7 +1233,6 @@ class GameEngine {
             this.scenery.push(group);
         }
 
-        // НЛО спавнится только не на последнем уровне
         if (Math.random() < 0.001 && this.currentLevelIdx !== LEVELS.length - 1) {
             const ufo = new THREE.Group();
             const dome = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.8}));
@@ -1218,7 +1254,6 @@ class GameEngine {
             if (obsType === 'cylinder') geo = new THREE.CylinderGeometry(1, 1, 1.5, 16);
             else if (obsType === 'cone') geo = new THREE.ConeGeometry(1.2, 2, 4);
             else if (obsType === 'dodecahedron') geo = new THREE.DodecahedronGeometry(1.2);
-            // ПАСХАЛКА 5 уровня: вращающиеся тороидальные узлы (квантовые аномалии)
             else if (obsType === 'torusKnot') geo = new THREE.TorusKnotGeometry(0.8, 0.2, 64, 8); 
             else geo = new THREE.BoxGeometry(2, 1.2, 1.5);
 
@@ -1228,7 +1263,7 @@ class GameEngine {
         const isTall = Math.random() > 0.7;
         o.scale.y = isTall ? 4 : 1;
         o.isTall = isTall;
-        o.baseShape = obsType; // запоминаем форму для анимации
+        o.baseShape = obsType; 
         
         o.isMover = (this.score > 1000 && Math.random() < 0.1);
         if (o.isMover) {
@@ -1250,16 +1285,16 @@ class GameEngine {
         this.activeObstacles.push(o);
     }
 
-    spawn() {
+    spawn(dtMult) {
         this.spawnScenery();
 
         const spawnMultiplier = this.speed / 15;
 
-        if (Math.random() < 0.02 * spawnMultiplier) {
+        if (Math.random() < 0.02 * spawnMultiplier * dtMult) {
             this.spawnObstacle();
         }
         
-        if (Math.random() < 0.03 * spawnMultiplier) {
+        if (Math.random() < 0.03 * spawnMultiplier * dtMult) {
             let c = this.pool.coins.pop() || new THREE.Mesh(
                 new THREE.TorusGeometry(0.4, 0.1, 8, 16),
                 new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2 })
@@ -1268,7 +1303,7 @@ class GameEngine {
             c.visible = true; c.type = 'coin'; this.scene.add(c); this.activeCoins.push(c);
         }
 
-        if (Math.random() < 0.003) {
+        if (Math.random() < 0.003 * dtMult) {
             let m = this.pool.magnets.pop() || new THREE.Mesh(
                 new THREE.OctahedronGeometry(0.5),
                 new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00f3ff, emissiveIntensity: 2 })
@@ -1278,7 +1313,7 @@ class GameEngine {
         }
 
         const shieldChance = this.upgradesData.shield.getVal(this.upgrades.shield);
-        if (Math.random() < shieldChance && !this.hasShield) {
+        if (Math.random() < shieldChance * dtMult && !this.hasShield) {
             let s = this.pool.shields.pop() || new THREE.Mesh(
                 new THREE.IcosahedronGeometry(0.5, 0),
                 new THREE.MeshStandardMaterial({ color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 2, wireframe: true })
@@ -1375,9 +1410,12 @@ class GameEngine {
         this.activeObstacles.forEach(o => { if(o.position.z > -20 && o.position.z < 10) o.visible = false; });
     }
 
-    spawnEngineSparks() {
+    spawnEngineSparks(dtMult) {
         if (!this.isJumping) {
-            for(let i=0; i<3; i++) {
+            let partsToSpawn = Math.floor(3 * dtMult);
+            if(partsToSpawn === 0 && Math.random() < 3 * dtMult) partsToSpawn = 1;
+
+            for(let i=0; i<partsToSpawn; i++) {
                 const p = new THREE.Mesh(
                     new THREE.BoxGeometry(0.08, 0.08, 0.4), 
                     new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending })
@@ -1397,16 +1435,52 @@ class GameEngine {
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        const t = performance.now() * 0.001;
         
-        if (this.state === 'PLAYING' || this.state === 'STORY') {
+        const now = performance.now();
+        let dt = this.lastTime ? (now - this.lastTime) / 1000 : 0.016;
+        if (dt > 0.1) dt = 0.1;
+        this.lastTime = now;
+        
+        const t = now * 0.001;
+        const dtMult = dt * 60; 
+        
+        if (this.state === 'INTRO' || this.state === 'PLAYING' || this.state === 'STORY') {
             
-            if (this.state === 'PLAYING') {
-                this.updateProceduralMusic();
-                this.score += 0.1 * (this.speed/10) * this.combo;
-                this.speed += 0.0015;
+            this.updateProceduralMusic();
+
+            this.floorMat.uniforms.uTime.value = t;
+            this.floorMat.uniforms.uSpeed.value = this.speed;
+            this.sunMat.uniforms.uTime.value = t;
+
+            if (this.state === 'INTRO') {
+                const duration = 1.5; 
+                const elapsed = t - this.introStartTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+                const ease = 1 - Math.pow(1 - progress, 3); 
+
+                this.camera.position.y = 30 + (this.targetCamY - 30) * ease;
+                this.camera.position.z = 30 + (this.targetCamZ - 30) * ease;
+                this.camera.lookAt(0, 1.5, -2);
                 
-                // Проверка перехода на следующий уровень
+                this.player.position.y = 20 + (0.65 - 20) * ease;
+                this.player.children[0].rotation.x = (Math.PI * 4) * (1 - ease);
+
+                this.scenery.forEach(s => {
+                    if (s.visible) s.position.z += this.speed * 0.05 * dtMult;
+                });
+
+                if (progress >= 1.0) {
+                    this.state = 'PLAYING';
+                    this.player.children[0].rotation.x = 0;
+                    this.player.position.y = 0.65;
+                    document.getElementById('hud-left').style.opacity = '1';
+                    document.getElementById('speed-lines').style.opacity = '1';
+                }
+            } 
+            else if (this.state === 'PLAYING') {
+                this.score += 0.1 * (this.speed/10) * this.combo * dtMult;
+                this.speed += 0.0015 * dtMult;
+                
                 if (this.currentLevelIdx < LEVELS.length - 1) {
                     const nextLevel = LEVELS[this.currentLevelIdx + 1];
                     if (this.score >= nextLevel.targetScore) {
@@ -1414,43 +1488,37 @@ class GameEngine {
                     }
                 }
                 this.updateMission('score', this.score);
-            }
 
-            this.camera.fov = this.baseFov + (this.speed-15)*1.2;
-            this.camera.updateProjectionMatrix();
+                this.camera.fov = this.baseFov + (this.speed-15)*1.2;
+                this.camera.updateProjectionMatrix();
 
-            this.floorMat.uniforms.uTime.value = t;
-            this.floorMat.uniforms.uSpeed.value = this.speed;
-            this.sunMat.uniforms.uTime.value = t;
+                if (this.magnetTime > 0) {
+                    this.magnetTime -= dt;
+                    document.getElementById('magnet-indicator').style.display = 'block';
+                } else document.getElementById('magnet-indicator').style.display = 'none';
 
-            if (this.magnetTime > 0 && this.state === 'PLAYING') {
-                this.magnetTime -= 0.016;
-                document.getElementById('magnet-indicator').style.display = 'block';
-            } else document.getElementById('magnet-indicator').style.display = 'none';
+                if (this.hasShield) {
+                    this.shieldMesh.rotation.y += 0.05 * dtMult;
+                    this.shieldMesh.rotation.z += 0.02 * dtMult;
+                }
 
-            if (this.hasShield) {
-                this.shieldMesh.rotation.y += 0.05;
-                this.shieldMesh.rotation.z += 0.02;
-            }
-
-            if (this.state === 'PLAYING') {
                 const targetX = this.lane * this.laneWidth;
-                this.player.position.x += (targetX - this.player.position.x) * 0.18; 
+                this.player.position.x += (targetX - this.player.position.x) * Math.min(0.18 * dtMult, 1); 
                 
                 const tilt = (this.player.position.x - targetX) * 0.12;
                 this.player.rotation.z = tilt;
                 this.player.rotation.y = tilt * 0.3;
                 this.camera.rotation.z = tilt * -0.05; 
                 
-                this.wheelL.rotation.x -= this.speed * 0.02;
-                this.wheelR.rotation.x -= this.speed * 0.02;
+                this.wheelL.rotation.x -= this.speed * 0.02 * dtMult;
+                this.wheelR.rotation.x -= this.speed * 0.02 * dtMult;
 
                 if (this.isJumping) {
-                    this.player.position.y += this.jumpV;
-                    this.jumpV -= 0.012;
+                    this.player.position.y += this.jumpV * dtMult;
+                    this.jumpV -= 0.012 * dtMult;
                     
                     if (this.barrelRollActive) {
-                        this.player.children[0].rotation.x -= 0.15;
+                        this.player.children[0].rotation.x -= 0.15 * dtMult;
                     }
 
                     if (this.player.position.y <= 0.65) { 
@@ -1463,125 +1531,125 @@ class GameEngine {
                     }
                 }
 
-                this.spawn();
-                this.spawnEngineSparks();
+                this.spawn(dtMult);
+                this.spawnEngineSparks(dtMult);
             }
 
-            this.scenery.forEach((s, i) => {
-                if (!s.visible) return;
-                if (this.state === 'PLAYING') s.position.z += this.speed * 0.05;
-                if (s.position.z > 10) {
-                    s.visible = false;
-                    this.scenery.splice(i, 1);
-                    this.pool.scenery.push(s);
-                }
-            });
-
-            this.activeObstacles.forEach((o, i) => {
-                if (!o.visible) return;
-
-                if (o.isUFO) {
-                    if (this.state === 'PLAYING') {
-                        o.position.x -= 0.15;
-                        o.rotation.y -= 0.02;
+            if (this.state === 'PLAYING' || this.state === 'STORY') {
+                this.scenery.forEach((s, i) => {
+                    if (!s.visible) return;
+                    if (this.state === 'PLAYING') s.position.z += this.speed * 0.05 * dtMult;
+                    if (s.position.z > 10) {
+                        s.visible = false;
+                        this.scenery.splice(i, 1);
+                        this.pool.scenery.push(s);
                     }
-                    if (o.position.x < -40) {
-                        this.scene.remove(o);
-                        this.activeObstacles.splice(i, 1);
-                    }
-                    return; 
-                }
-                
-                if (this.state === 'PLAYING') {
-                    o.position.z += this.speed * 0.05;
-                    // Вращение узлов на 5 уровне
-                    if (o.baseShape === 'torusKnot') {
-                        o.rotation.x += 0.05;
-                        o.rotation.y += 0.05;
-                    }
-                }
+                });
 
-                if (o.isMover && o.position.z > -60 && o.position.z < -20 && this.state === 'PLAYING') {
-                    const oTargetX = o.targetLane * this.laneWidth;
-                    o.position.x += (oTargetX - o.position.x) * 0.08;
-                    // Для ТорусКнота оставляем его собственное вращение
-                    if (o.baseShape !== 'torusKnot') o.rotation.y = (oTargetX - o.position.x) * 0.1; 
-                } else if (o.isMover && o.baseShape !== 'torusKnot') { o.rotation.y = 0; }
+                this.activeObstacles.forEach((o, i) => {
+                    if (!o.visible) return;
 
-                if (this.state === 'PLAYING' && Math.abs(o.position.z - this.player.position.z) < 1.4 && Math.abs(o.position.x - this.player.position.x) < 1.4) {
-                    let hit = false;
-                    if (o.isTall && !this.isSliding) hit = true;
-                    else if (!o.isTall && this.player.position.y < 1.5) hit = true;
+                    if (o.isUFO) {
+                        if (this.state === 'PLAYING') {
+                            o.position.x -= 0.15 * dtMult;
+                            o.rotation.y -= 0.02 * dtMult;
+                        }
+                        if (o.position.x < -40) {
+                            this.scene.remove(o);
+                            this.activeObstacles.splice(i, 1);
+                        }
+                        return; 
+                    }
                     
-                    if (hit) {
-                        if (this.hasShield) {
-                            this.breakShield();
-                            o.visible = false;
-                        } else {
-                            this.die();
+                    if (this.state === 'PLAYING') {
+                        o.position.z += this.speed * 0.05 * dtMult;
+                        if (o.baseShape === 'torusKnot') {
+                            o.rotation.x += 0.05 * dtMult;
+                            o.rotation.y += 0.05 * dtMult;
                         }
                     }
-                }
-                if (o.position.z > 10) { 
-                    o.visible = false; this.activeObstacles.splice(i, 1); this.pool.obstacles.push(o); 
-                    this.combo = Math.min(10, this.combo + 0.05);
-                }
-            });
 
-            this.activeCoins.forEach((c, i) => {
-                if (!c.visible) return;
-                if (this.state === 'PLAYING') {
-                    c.position.z += this.speed * 0.05;
-                    c.rotation.y += 0.1;
-                }
+                    if (o.isMover && o.position.z > -60 && o.position.z < -20 && this.state === 'PLAYING') {
+                        const oTargetX = o.targetLane * this.laneWidth;
+                        o.position.x += (oTargetX - o.position.x) * Math.min(0.08 * dtMult, 1);
+                        if (o.baseShape !== 'torusKnot') o.rotation.y = (oTargetX - o.position.x) * 0.1; 
+                    } else if (o.isMover && o.baseShape !== 'torusKnot') { o.rotation.y = 0; }
 
-                if (this.magnetTime > 0 && c.type === 'coin' && c.position.z > -60 && c.position.z < 0 && this.state === 'PLAYING') {
-                    c.position.x += (this.player.position.x - c.position.x) * 0.08;
-                    c.position.y += (this.player.position.y - c.position.y) * 0.08;
-                    c.position.z += (this.player.position.z - c.position.z) * 0.05;
-                }
-
-                if (this.state === 'PLAYING' && Math.abs(c.position.z - this.player.position.z) < 1.5 && Math.abs(c.position.x - this.player.position.x) < 1.5 && Math.abs(c.position.y - this.player.position.y) < 1.5) {
-                    if (c.type === 'magnet') {
-                        this.magnetTime = this.upgradesData.magnet.getVal(this.upgrades.magnet);
-                        this.playSfx(1200, 'square', 0.2, 0.1);
-                        this.pool.magnets.push(c);
-                    } else if (c.type === 'shield') {
-                        this.activateShield();
-                        this.pool.shields.push(c);
-                    } else { 
-                        this.coins += 1;
-                        this.runCoins += 1;
-                        this.updateMission('coins', 1);
-                        this.playSfx(800, 'sine', 0.1, 0.05);
-                        this.combo = Math.min(10, this.combo + 0.5);
-                        this.pool.coins.push(c);
-                        this.updateUI();
+                    if (this.state === 'PLAYING' && Math.abs(o.position.z - this.player.position.z) < 1.4 && Math.abs(o.position.x - this.player.position.x) < 1.4) {
+                        let hit = false;
+                        if (o.isTall && !this.isSliding) hit = true;
+                        else if (!o.isTall && this.player.position.y < 1.5) hit = true;
+                        
+                        if (hit) {
+                            if (this.hasShield) {
+                                this.breakShield();
+                                o.visible = false;
+                            } else {
+                                this.die();
+                            }
+                        }
                     }
-                    c.visible = false; this.activeCoins.splice(i, 1);
-                } else if (c.position.z > 10) { 
-                    c.visible = false; this.activeCoins.splice(i, 1); 
-                    if(c.type==='magnet') this.pool.magnets.push(c); 
-                    else if(c.type==='shield') this.pool.shields.push(c);
-                    else this.pool.coins.push(c); 
+                    if (o.position.z > 10) { 
+                        o.visible = false; this.activeObstacles.splice(i, 1); this.pool.obstacles.push(o); 
+                        this.combo = Math.min(10, this.combo + 0.05);
+                    }
+                });
+
+                this.activeCoins.forEach((c, i) => {
+                    if (!c.visible) return;
+                    if (this.state === 'PLAYING') {
+                        c.position.z += this.speed * 0.05 * dtMult;
+                        c.rotation.y += 0.1 * dtMult;
+                    }
+
+                    if (this.magnetTime > 0 && c.type === 'coin' && c.position.z > -60 && c.position.z < 0 && this.state === 'PLAYING') {
+                        c.position.x += (this.player.position.x - c.position.x) * Math.min(0.08 * dtMult, 1);
+                        c.position.y += (this.player.position.y - c.position.y) * Math.min(0.08 * dtMult, 1);
+                        c.position.z += (this.player.position.z - c.position.z) * Math.min(0.05 * dtMult, 1);
+                    }
+
+                    if (this.state === 'PLAYING' && Math.abs(c.position.z - this.player.position.z) < 1.5 && Math.abs(c.position.x - this.player.position.x) < 1.5 && Math.abs(c.position.y - this.player.position.y) < 1.5) {
+                        if (c.type === 'magnet') {
+                            this.magnetTime = this.upgradesData.magnet.getVal(this.upgrades.magnet);
+                            this.playSfx(1200, 'square', 0.2, 0.1);
+                            this.pool.magnets.push(c);
+                        } else if (c.type === 'shield') {
+                            this.activateShield();
+                            this.pool.shields.push(c);
+                        } else { 
+                            this.coins += 1;
+                            this.runCoins += 1;
+                            this.updateMission('coins', 1);
+                            this.playSfx(800, 'sine', 0.1, 0.05);
+                            this.combo = Math.min(10, this.combo + 0.5);
+                            this.pool.coins.push(c);
+                            this.updateUI();
+                        }
+                        c.visible = false; this.activeCoins.splice(i, 1);
+                    } else if (c.position.z > 10) { 
+                        c.visible = false; this.activeCoins.splice(i, 1); 
+                        if(c.type==='magnet') this.pool.magnets.push(c); 
+                        else if(c.type==='shield') this.pool.shields.push(c);
+                        else this.pool.coins.push(c); 
+                    }
+                });
+
+                if (this.state === 'PLAYING') {
+                    this.stars.position.z += this.speed * 0.02 * dtMult;
+                    if (this.stars.position.z > 100) this.stars.position.z = 0;
+
+                    for (let i = this.engineParticles.length - 1; i >= 0; i--) {
+                        const p = this.engineParticles[i];
+                        p.position.add(p.velocity.clone().multiplyScalar(dtMult));
+                        p.scale.multiplyScalar(Math.pow(0.85, dtMult));
+                        p.material.opacity -= 0.05 * dtMult; 
+                        if (p.scale.x < 0.05 || p.material.opacity <= 0) { this.scene.remove(p); this.engineParticles.splice(i, 1); }
+                    }
+
+                    document.getElementById('score').innerText = Math.floor(this.score);
+                    const cVal = Math.floor(this.combo);
+                    document.getElementById('combo').innerText = 'x' + cVal;
                 }
-            });
-
-            if (this.state === 'PLAYING') {
-                this.stars.position.z += this.speed * 0.02;
-                if (this.stars.position.z > 100) this.stars.position.z = 0;
-
-                for (let i = this.engineParticles.length - 1; i >= 0; i--) {
-                    const p = this.engineParticles[i];
-                    p.position.add(p.velocity);
-                    p.scale.multiplyScalar(0.85);
-                    p.material.opacity -= 0.05; 
-                    if (p.scale.x < 0.05 || p.material.opacity <= 0) { this.scene.remove(p); this.engineParticles.splice(i, 1); }
-                }
-
-                document.getElementById('score').innerText = Math.floor(this.score);
-                const cVal = Math.floor(this.combo);
-                document.getElementById('combo').innerText = 'x' + cVal;
             }
         }
 
