@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Кибер Раннер: Ультимативное Издание</title>
+    <title>Кибер Раннер</title>
     
-    <!-- Подключение иконки (Favicon) -->
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
 
@@ -24,25 +23,24 @@
         }
         body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; user-select: none; touch-action: none; overscroll-behavior: none; }
         
-        /* Визуальные эффекты */
-        #vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(10,0,20,0.95) 100%); pointer-events: none; z-index: 1; }
-        
+        #vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(10,0,20,0.95) 100%); pointer-events: none; z-index: 1; transition: background 1s; }
         #speed-lines { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.5s; background-image: repeating-linear-gradient(90deg, transparent 0%, rgba(0, 255, 255, 0.05) 1%, transparent 2%); background-size: 200% 100%; animation: moveLines 0.3s linear infinite; mix-blend-mode: screen; }
         @keyframes moveLines { 0% { background-position: 0 0; } 100% { background-position: 100% 0; } }
 
+        #level-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 50; transition: opacity 0.5s; }
+        #level-flash.flash { opacity: 0.8; transition: opacity 0.1s; }
+
         #ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; }
         
-        /* Игровой интерфейс */
-        .hud { padding: calc(15px + var(--safe-top)) 20px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .hud-left { display: flex; gap: 10px; }
-        .hud-item { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); border: 1px solid var(--neon-blue); padding: 8px 15px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); min-width: 80px; text-align: center; transition: border-color 1s, box-shadow 1s; }
-        .val { font-size: 22px; font-weight: 900; font-family: 'Courier New', monospace; display: block; color: var(--neon-blue); transition: color 1s; text-shadow: 0 0 10px var(--neon-blue); }
-        .lbl { font-size: 10px; text-transform: uppercase; opacity: 0.7; letter-spacing: 1px; }
+        .hud { padding: calc(10px + var(--safe-top)) 15px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+        .hud-left { display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 65px); }
+        .hud-item { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); border: 1px solid var(--neon-blue); padding: 4px 8px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); min-width: 50px; text-align: center; transition: border-color 1s, box-shadow 1s; }
+        .val { font-size: 16px; font-weight: 900; font-family: 'Courier New', monospace; display: block; color: var(--neon-blue); transition: color 1s; text-shadow: 0 0 8px var(--neon-blue); }
+        .lbl { font-size: 8px; text-transform: uppercase; opacity: 0.8; letter-spacing: 0.5px; }
 
-        .btn-audio { pointer-events: auto; background: rgba(0,0,0,0.7); border: 1px solid #fff; border-radius: 50%; width: 40px; height: 40px; color: #fff; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 0 10px rgba(255,255,255,0.3); transition: 0.2s;}
+        .btn-audio { pointer-events: auto; background: rgba(0,0,0,0.7); border: 1px solid #fff; border-radius: 50%; width: 36px; height: 36px; color: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 0 10px rgba(255,255,255,0.3); transition: 0.2s;}
         .btn-audio:active { transform: scale(0.9); }
 
-        /* Экраны */
         .screen { position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(30,0,50,0.9) 0%, rgba(0,0,0,0.98) 100%); display: flex; align-items: center; justify-content: center; pointer-events: auto; opacity: 0; transition: 0.5s; display: none; z-index: 100; backdrop-filter: blur(5px); }
         .screen.active { display: flex; opacity: 1; }
         .panel { background: rgba(15, 10, 25, 0.95); border: 2px solid var(--neon-pink); border-radius: 24px; padding: 30px; text-align: center; max-width: 85%; width: 320px; box-shadow: 0 0 40px rgba(255, 0, 119, 0.5); position: relative;}
@@ -59,23 +57,22 @@
         .loader-bar { width: 220px; height: 6px; background: #222; margin-top: 20px; border-radius: 3px; overflow: hidden; border: 1px solid #444; }
         .loader-progress { width: 0%; height: 100%; background: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); transition: width 0.3s; }
 
-        /* Индикаторы */
-        #combo-wrap { position: absolute; left: 50%; top: 15%; transform: translateX(-50%); font-style: italic; opacity: 0; transition: 0.2s; }
-        #combo-wrap.show { opacity: 1; transform: translateX(-50%) scale(1.2); }
-        .combo-val { font-size: 44px; font-weight: 900; color: var(--neon-yellow); text-shadow: 0 0 20px var(--neon-yellow); }
+        .buffs-container { position: absolute; top: calc(75px + var(--safe-top)); right: 15px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+        .buff-indicator { background: rgba(0,0,0,0.7); border: 1px solid; border-radius: 15px; padding: 6px 12px; font-weight: bold; font-size: 10px; text-transform: uppercase; text-shadow: 0 0 5px; backdrop-filter: blur(5px); display: none; }
+        #magnet-indicator { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 255, 255, 0.4); }
+        #shield-indicator { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(0, 255, 102, 0.4); }
 
-        .buff-indicator { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 16px; display: none; text-transform: uppercase; text-shadow: 0 0 10px; }
-        #magnet-indicator { color: var(--neon-blue); }
-        #shield-indicator { color: var(--neon-green); top: 110px; }
+        .level-banner { position: absolute; top: 18%; left: 50%; transform: translate(-50%, -50%) scale(0.5); opacity: 0; text-align: center; pointer-events: none; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; background: rgba(10, 0, 20, 0.85); padding: 15px 35px; border-radius: 30px; border: 2px solid var(--neon-blue); box-shadow: 0 0 30px var(--neon-blue), inset 0 0 15px rgba(0, 255, 255, 0.2); backdrop-filter: blur(10px); }
+        .level-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .level-banner h2 { font-size: 16px; color: #fff; margin: 0 0 5px 0; letter-spacing: 6px; text-shadow: 0 0 10px rgba(255,255,255,0.6); opacity: 0.9; }
+        .level-banner h3 { font-size: 28px; color: var(--neon-pink); margin: 0; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-pink); white-space: nowrap; }
 
-        /* Интерфейс миссий */
         .mission-box { background: rgba(0,0,0,0.6); border: 1px dashed var(--neon-yellow); border-radius: 12px; padding: 12px; margin-bottom: 15px; font-size: 13px; text-align: left; position: relative; }
         .mission-title { color: var(--neon-yellow); font-weight: bold; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;}
         .mission-progress { background: #333; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
         .mission-fill { background: var(--neon-yellow); height: 100%; width: 0%; transition: width 0.3s; box-shadow: 0 0 10px var(--neon-yellow); }
         .mission-reward { position: absolute; top: 12px; right: 12px; color: var(--neon-yellow); font-weight: bold; font-size: 14px;}
 
-        /* Вкладки и сетка магазина */
         .shop-tabs { display: flex; margin-bottom: 10px; gap: 5px;}
         .shop-tab { flex: 1; background: #222; color: #aaa; border: 1px solid #444; border-radius: 10px; padding: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase;}
         .shop-tab.active { background: rgba(0, 255, 255, 0.15); color: var(--neon-blue); border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0,255,255,0.4);}
@@ -94,51 +91,58 @@
         .u-bar { width: 10px; height: 5px; background: #333; border-radius: 2px; }
         .u-bar.fill { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
 
-        /* Уведомления */
-        .notif { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; box-shadow: 0 0 25px var(--neon-green); text-transform: uppercase; text-align: center;}
+        .notif { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; box-shadow: 0 0 25px var(--neon-green); text-transform: uppercase; text-align: center; pointer-events: none;}
         .notif.show { top: env(safe-area-inset-top, 20px); }
 
-        /* Ежедневный бонус */
         .daily-box { display: none; background: rgba(0,0,0,0.9); position: absolute; inset: 0; z-index: 150; align-items: center; justify-content: center; backdrop-filter: blur(10px);}
         .daily-panel { background: #111; border: 2px solid var(--neon-yellow); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 40px rgba(255, 221, 0, 0.4); max-width: 80%;}
         .daily-reward { font-size: 44px; color: var(--neon-yellow); text-shadow: 0 0 25px var(--neon-yellow); font-weight: bold; margin: 20px 0;}
+
+        .story-desc { font-size: 14px; color: #ddd; line-height: 1.5; margin-bottom: 20px; text-shadow: 0 0 5px rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
 
 <div id="loading" class="loading">
-    <h1 style="margin:0;">СИНХРОНИЗАЦИЯ</h1>
+    <h1 style="margin:0;" id="loading-text">СИНХРОНИЗАЦИЯ</h1>
     <div class="loader-bar"><div id="loader-progress" class="loader-progress"></div></div>
 </div>
 
+<div id="level-flash"></div>
 <div id="vignette"></div>
 <div id="speed-lines"></div>
 
-<!-- Игровой интерфейс (HUD) -->
 <div id="ui">
     <div class="hud">
         <div class="hud-left">
-            <div class="hud-item" id="hud-score-box"><span class="lbl">Дистанция</span><span id="score" class="val">0</span></div>
-            <div class="hud-item" id="hud-coins-box" style="border-color: var(--neon-pink);"><span class="lbl">Кредиты</span><span id="coins" class="val">0</span></div>
+            <div class="hud-item"><span class="lbl" id="lbl-dist">Дистанция</span><span id="score" class="val">0</span></div>
+            <div class="hud-item" style="border-color: var(--neon-pink);"><span class="lbl" id="lbl-coins">Кредиты</span><span id="coins" class="val">0</span></div>
+            <div class="hud-item" style="border-color: #fff;"><span class="lbl" id="lbl-level">Ур.</span><span id="level-val" class="val" style="color:#fff;">1</span></div>
+            <div class="hud-item" style="border-color: var(--neon-yellow);"><span class="lbl" id="lbl-combo">Комбо</span><span id="combo" class="val" style="color:var(--neon-yellow);">x1</span></div>
         </div>
         <button class="btn-audio" id="btn-audio">🔊</button>
     </div>
     
-    <div id="combo-wrap"><span class="combo-val">x<span id="combo">1</span></span></div>
-    <div id="magnet-indicator" class="buff-indicator">🧲 МАГНИТ</div>
-    <div id="shield-indicator" class="buff-indicator">🛡️ ЗАЩИТА АКТИВНА</div>
+    <div class="buffs-container">
+        <div id="magnet-indicator" class="buff-indicator">🧲 МАГНИТ</div>
+        <div id="shield-indicator" class="buff-indicator">🛡️ ЗАЩИТА</div>
+    </div>
+    
+    <div class="level-banner" id="level-banner">
+        <h2 id="lb-title">УРОВЕНЬ 2</h2>
+        <h3 id="lb-name">ТОКСИЧНЫЕ ПУСТОШИ</h3>
+    </div>
 
     <div style="margin-top: auto; height: calc(80px + var(--safe-bottom));"></div>
 </div>
 
-<!-- Главное меню -->
 <div id="screen-start" class="screen active">
     <div class="panel">
         <h1 id="main-title">КИБЕР<br>РАННЕР</h1>
-        <p id="high-score" style="color: var(--neon-blue); letter-spacing: 2px; margin-bottom: 15px; font-weight: bold;">РЕКОРД: 0</p>
+        <p style="color: var(--neon-blue); letter-spacing: 2px; margin-bottom: 15px; font-weight: bold;"><span id="lbl-record">РЕКОРД:</span> <span id="high-score">0</span></p>
         
         <div class="mission-box" id="mission-ui">
-            <div class="mission-title">ЦЕЛЬ ЗАЕЗДА</div>
+            <div class="mission-title" id="mission-title">ЦЕЛЬ ЗАЕЗДА</div>
             <div id="mission-text">Собери 50 монет</div>
             <div class="mission-reward">🪙 <span id="mission-reward-val">100</span></div>
             <div class="mission-progress"><div class="mission-fill" id="mission-fill"></div></div>
@@ -146,19 +150,18 @@
 
         <button class="btn" id="btn-start">НАЧАТЬ ЗАЕЗД</button>
         <button class="btn btn-shop" id="btn-open-shop">ГАРАЖ / ПРОКАЧКА</button>
-        <div style="font-size: 11px; opacity: 0.6; margin-top: 15px; line-height: 1.6;">СВАЙПАЙ В СТОРОНЫ ДЛЯ ПОВОРОТА<br>ВВЕРХ - ПРЫЖОК | ВНИЗ - ПОДКАТ</div>
+        <div id="controls-text" style="font-size: 11px; opacity: 0.6; margin-top: 15px; line-height: 1.6;">СВАЙП / СТРЕЛКИ - ПОВОРОТ<br>ВВЕРХ - ПРЫЖОК | ВНИЗ - ПОДКАТ</div>
     </div>
 </div>
 
-<!-- Экран Магазина -->
 <div id="screen-shop" class="screen">
     <div class="panel">
-        <h1 style="color: var(--neon-pink); -webkit-text-fill-color: var(--neon-pink); margin-bottom: 5px; font-size: 26px;">МАСТЕРСКАЯ</h1>
-        <p style="color: var(--neon-yellow); margin-top: 0; font-size: 14px; font-weight: bold;">Баланс: <span id="shop-coins">0</span> 🪙</p>
+        <h1 id="shop-title" style="color: var(--neon-pink); -webkit-text-fill-color: var(--neon-pink); margin-bottom: 5px; font-size: 26px;">МАСТЕРСКАЯ</h1>
+        <p style="color: var(--neon-yellow); margin-top: 0; font-size: 14px; font-weight: bold;"><span id="lbl-balance">Баланс:</span> <span id="shop-coins">0</span> 🪙</p>
         
         <div class="shop-tabs">
             <div class="shop-tab active" id="tab-skins">Кубы</div>
-            <div class="shop-tab" id="tab-upgrades">Улучшения</div>
+            <div class="shop-tab" id="tab-upgrades">Апгрейды</div>
         </div>
 
         <div class="shop-container">
@@ -169,12 +172,19 @@
     </div>
 </div>
 
-<!-- Экран окончания игры -->
+<div id="screen-story" class="screen">
+    <div class="panel">
+        <h1 id="story-title" style="font-size: 24px; color: var(--neon-blue); -webkit-text-fill-color: var(--neon-blue);">СЕКТОР ДОСТИГНУТ</h1>
+        <p class="story-desc" id="story-text">Текст сюжета...</p>
+        <button class="btn" id="btn-continue-story" style="background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue);">ПРОДОЛЖИТЬ</button>
+    </div>
+</div>
+
 <div id="screen-death" class="screen">
     <div class="panel">
-        <h1 style="filter: drop-shadow(0 0 10px #f00); -webkit-text-fill-color: #ff3333;">СИСТЕМА СБИТА</h1>
-        <p style="font-size: 18px; margin: 15px 0;">Пройдено: <strong style="color:#fff;"><span id="final-dist">0</span> м</strong></p>
-        <p style="font-size: 16px; color: var(--neon-yellow); margin-bottom: 25px; font-weight: bold;">Собрано: +<span id="final-coins">0</span> 🪙</p>
+        <h1 id="death-title" style="filter: drop-shadow(0 0 10px #f00); -webkit-text-fill-color: #ff3333;">СИСТЕМА СБИТА</h1>
+        <p style="font-size: 18px; margin: 15px 0;"><span id="lbl-passed">Пройдено:</span> <strong style="color:#fff;"><span id="final-dist">0</span> м</strong></p>
+        <p style="font-size: 16px; color: var(--neon-yellow); margin-bottom: 25px; font-weight: bold;"><span id="lbl-collected">Собрано: +</span><span id="final-coins">0</span> 🪙</p>
         
         <button class="btn btn-ad-double" id="btn-double-coins" style="display: none;">📺 УДВОИТЬ КУШ</button>
         <button class="btn btn-revive" id="btn-revive">📺 ВОССТАНОВИТЬСЯ</button>
@@ -182,11 +192,10 @@
     </div>
 </div>
 
-<!-- Ежедневный бонус -->
 <div id="daily-bonus" class="daily-box">
     <div class="daily-panel">
-        <h2 style="color: var(--neon-blue); margin-top:0; filter: drop-shadow(0 0 5px var(--neon-blue));">БОНУС ВХОДА!</h2>
-        <p style="font-size: 14px; color: #ccc;">Система вознаграждает вас за возврат:</p>
+        <h2 id="daily-title" style="color: var(--neon-blue); margin-top:0; filter: drop-shadow(0 0 5px var(--neon-blue));">БОНУС ВХОДА!</h2>
+        <p id="daily-desc" style="font-size: 14px; color: #ccc;">Система вознаграждает вас за возврат:</p>
         <div class="daily-reward">+<span id="daily-val">0</span> 🪙</div>
         <button class="btn" id="btn-claim-daily" style="background: var(--neon-yellow); color: #000; box-shadow: 0 0 20px rgba(255,221,0,0.6);">ПРИНЯТЬ</button>
     </div>
@@ -195,104 +204,123 @@
 <div id="notification" class="notif">ЗАДАНИЕ ВЫПОЛНЕНО! +100 🪙</div>
 
 <script>
-/** * ДИНАМИЧЕСКИЕ ШЕЙДЕРЫ (ОБНОВЛЕНЫ ПОД РЕФЕРЕНС) */
-const SHADERS = {
-    floorV: `
-        varying vec2 vUv; varying float vFog; uniform float uTime;
-        void main() {
-            vUv = uv; vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            vFog = -mvPosition.z; gl_Position = projectionMatrix * mvPosition;
-        }
-    `,
-    floorF: `
-        varying vec2 vUv; varying float vFog; 
-        uniform float uTime; uniform float uSpeed;
-        uniform vec3 uGridColor; uniform vec3 uBgColor;
-        void main() {
-            vec2 uv = vUv; uv.y += uTime * uSpeed * 0.1;
-            
-            // Основная сетка (Крупная)
-            float gridX = step(0.97, fract(uv.x * 12.0));
-            float gridY = step(0.97, fract(uv.y * 24.0));
-            float grid = max(gridX, gridY);
-
-            // Вторичная сетка (Мелкая, менее яркая)
-            float subGridX = step(0.98, fract(uv.x * 24.0));
-            float subGridY = step(0.98, fract(uv.y * 48.0));
-            float subGrid = max(subGridX, subGridY) * 0.3;
-            
-            float totalGrid = max(grid, subGrid);
-            vec3 color = mix(uBgColor, uGridColor, totalGrid);
-            
-            // Сильное свечение на пересечениях основной сетки (эффект Bloom)
-            color += uGridColor * (gridX * gridY) * 3.0; 
-            
-            // Эффект сканлайнов
-            color -= 0.05 * sin(uv.y * 800.0 + uTime * 15.0); 
-            
-            float fog = smoothstep(20.0, 100.0, vFog);
-            gl_FragColor = vec4(mix(color, uBgColor, fog), 1.0);
-        }
-    `,
-    sunV: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    sunF: `
-        varying vec2 vUv; uniform float uTime;
-        uniform vec3 uSunTop; uniform vec3 uSunBot;
-        void main() {
-            float d = distance(vUv, vec2(0.5, 0.5));
-            if (d > 0.5) discard;
-            float pulse = 1.0 + 0.03 * sin(uTime * 3.0);
-            vec3 color = mix(uSunBot, uSunTop, vUv.y);
-            
-            // Более плотные полосы на солнце
-            float stripes = step(0.15, fract(vUv.y * 20.0 - uTime * 0.5));
-            if (vUv.y < 0.5) color *= stripes;
-            
-            // Легкое свечение краев
-            float glow = smoothstep(0.48, 0.5, d);
-            color += vec3(1.0) * glow * 0.5;
-
-            gl_FragColor = vec4(color * pulse, 1.0);
-        }
-    `
+// --- ЛОКАЛИЗАЦИЯ (Всё на русском, если язык RU) ---
+const I18N = {
+    ru: {
+        loading: "СИНХРОНИЗАЦИЯ", dist: "Дистанция", credits: "Кредиты", magnet: "🧲 МАГНИТ", shield: "🛡️ ЗАЩИТА", lvl: "Ур.", combo: "Комбо",
+        title: "КИБЕР<br>РАННЕР", record: "РЕКОРД:", mission_t: "ЦЕЛЬ ЗАЕЗДА", start: "НАЧАТЬ ЗАЕЗД", garage: "ГАРАЖ / ПРОКАЧКА",
+        controls: "СВАЙП / СТРЕЛКИ - ПОВОРОТ<br>ВВЕРХ - ПРЫЖОК | ВНИЗ - ПОДКАТ", shop_title: "МАСТЕРСКАЯ", balance: "Баланс:",
+        tab_skins: "Кубы", tab_upgs: "Апгрейды", to_menu: "В ГЛАВНОЕ МЕНЮ", death_title: "СИСТЕМА СБИТА", passed: "Пройдено:",
+        collected: "Собрано: +", double: "📺 УДВОИТЬ КУШ", revive: "📺 ВОССТАНОВИТЬСЯ", finish: "ЗАВЕРШИТЬ",
+        daily_t: "БОНУС ВХОДА!", daily_d: "Система вознаграждает вас за возврат:", claim: "ПРИНЯТЬ", continue_run: "ПРОДОЛЖИТЬ",
+        m_coins: "Собери {n} монет", m_jumps: "Сделай {n} прыжков", m_slides: "Сделай {n} подкатов", m_score: "Набери {n} м за заезд",
+        equipped: "ВЫБРАН", equip: "ОДЕТЬ", max: "МАКСИМУМ", m_done: "ЗАДАНИЕ ВЫПОЛНЕНО! +", doubled: "КРЕДИТЫ УДВОЕНЫ!",
+        hacker: "КОД ВЗЛОМАН: СКИН 'ХАКЕР' 👾", hacker_err: "ТЫ УЖЕ ХАКЕР!", barrel: "СДЕЛАЙ БОЧКУ! КОМБО +2",
+        s_cyan: "НЕОН", s_pink: "МАГЕНТА", s_green: "ТОКСИК", s_yellow: "ИСКРА", s_orange: "ПЛАМЯ", s_red: "ЛАЗЕР", s_purple: "ПЛАЗМА", s_white: "КВАНТ", s_gold: "АУРУМ", s_ghost: "ФАНТОМ", s_hacker: "ХАКЕР",
+        u_mag: "МАГНИТ", u_shield: "ЩИТ (ШАНС)", level: "УРОВЕНЬ", zone: "СМЕНА ЗОНЫ!", sector_reached: "СЕКТОР ДОСТИГНУТ"
+    },
+    en: {
+        loading: "SYNCHRONIZING", dist: "Distance", credits: "Credits", magnet: "🧲 MAGNET", shield: "🛡️ SHIELD", lvl: "Lvl", combo: "Combo",
+        title: "CYBER<br>RUNNER", record: "RECORD:", mission_t: "CURRENT GOAL", start: "START RUN", garage: "GARAGE / UPGRADES",
+        controls: "SWIPE / ARROWS TO STEER<br>UP - JUMP | DOWN - SLIDE", shop_title: "WORKSHOP", balance: "Balance:",
+        tab_skins: "Cubes", tab_upgs: "Upgrades", to_menu: "MAIN MENU", death_title: "SYSTEM CRASHED", passed: "Distance:",
+        collected: "Collected: +", double: "📺 DOUBLE LOOT", revive: "📺 RESTORE", finish: "END RUN",
+        daily_t: "LOGIN BONUS!", daily_d: "The system rewards your return:", claim: "CLAIM", continue_run: "CONTINUE",
+        m_coins: "Collect {n} coins", m_jumps: "Do {n} jumps", m_slides: "Do {n} slides", m_score: "Reach {n} m in a run",
+        equipped: "EQUIPPED", equip: "EQUIP", max: "MAX LEVEL", m_done: "MISSION COMPLETE! +", doubled: "CREDITS DOUBLED!",
+        hacker: "CODE HACKED: 'HACKER' UNLOCKED 👾", hacker_err: "YOU ARE ALREADY A HACKER!", barrel: "BARREL ROLL! COMBO +2",
+        s_cyan: "NEON", s_pink: "MAGENTA", s_green: "TOXIC", s_yellow: "SPARK", s_orange: "FLAME", s_red: "LASER", s_purple: "PLASMA", s_white: "QUANTUM", s_gold: "AURUM", s_ghost: "PHANTOM", s_hacker: "HACKER",
+        u_mag: "MAGNET", u_shield: "SHIELD (CHANCE)", level: "LEVEL", zone: "ZONE SHIFT!", sector_reached: "SECTOR REACHED"
+    }
 };
 
-// Палитры Биомов (Точно как на референсе)
-const PALETTES = [
-    { grid: 0x00ffff, bg: 0x0a001a, sTop: 0xffdd00, sBot: 0xff0077 }, // Референс: Cyan сетка, темный космос, желто-розовое солнце
-    { grid: 0x00ff66, bg: 0x051005, sTop: 0x00ffff, sBot: 0x00ff66 }, // Токсичный
-    { grid: 0xff0033, bg: 0x1a0000, sTop: 0xff0077, sBot: 0xff0033 }, // Инферно
-    { grid: 0xffffff, bg: 0x000000, sTop: 0xffffff, sBot: 0x555555 }  // Пустота
+const SHADERS = {
+    floorV: `varying vec2 vUv; varying float vFog; uniform float uTime; void main() { vUv = uv; vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); vFog = -mvPosition.z; gl_Position = projectionMatrix * mvPosition; }`,
+    floorF: `varying vec2 vUv; varying float vFog; uniform float uTime; uniform float uSpeed; uniform vec3 uGridColor; uniform vec3 uBgColor; void main() { vec2 uv = vUv; uv.y += uTime * uSpeed * 0.1; float gridX = step(0.97, fract(uv.x * 12.0)); float gridY = step(0.97, fract(uv.y * 24.0)); float grid = max(gridX, gridY); float subGridX = step(0.98, fract(uv.x * 24.0)); float subGridY = step(0.98, fract(uv.y * 48.0)); float subGrid = max(subGridX, subGridY) * 0.3; float totalGrid = max(grid, subGrid); vec3 color = mix(uBgColor, uGridColor, totalGrid); color += uGridColor * (gridX * gridY) * 3.0; color -= 0.05 * sin(uv.y * 800.0 + uTime * 15.0); float fog = smoothstep(20.0, 100.0, vFog); gl_FragColor = vec4(mix(color, uBgColor, fog), 1.0); }`,
+    sunV: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    sunF: `varying vec2 vUv; uniform float uTime; uniform vec3 uSunTop; uniform vec3 uSunBot; void main() { float d = distance(vUv, vec2(0.5, 0.5)); if (d > 0.5) discard; float pulse = 1.0 + 0.03 * sin(uTime * 3.0); vec3 color = mix(uSunBot, uSunTop, vUv.y); float stripes = step(0.15, fract(vUv.y * 20.0 - uTime * 0.5)); if (vUv.y < 0.5) color *= stripes; float glow = smoothstep(0.48, 0.5, d); color += vec3(1.0) * glow * 0.5; gl_FragColor = vec4(color * pulse, 1.0); }`
+};
+
+const LEVELS = [
+    {
+        id: 0,
+        name: { ru: "СИНТ-СИТИ", en: "SYNTH-CITY" },
+        pal: { grid: 0x00ffff, bg: 0x0a001a, sTop: 0xffdd00, sBot: 0xff0077 }, 
+        targetScore: 0,
+        obsShape: 'box', 
+        music: { bpm: 0.12, baseNotes: [65.41, 65.41, 65.41, 65.41, 77.78, 77.78, 77.78, 77.78, 87.31, 87.31, 98.00, 98.00, 65.41, 65.41, 65.41, 65.41], filterFreq: 600 },
+        story: { ru: "", en: "" }
+    },
+    {
+        id: 1,
+        name: { ru: "ТОКСИЧНЫЕ ПУСТОШИ", en: "TOXIC WASTELAND" },
+        pal: { grid: 0x00ff66, bg: 0x051005, sTop: 0x00ffff, sBot: 0x00ff66 },
+        targetScore: 2000,
+        obsShape: 'cylinder', 
+        music: { bpm: 0.10, baseNotes: [73.42, 73.42, 82.41, 82.41, 87.31, 87.31, 98.00, 98.00, 73.42, 73.42, 65.41, 65.41, 73.42, 73.42, 82.41, 82.41], filterFreq: 800 },
+        story: { 
+            ru: "Вырвавшись из Неонового Города, вы въезжаете в зону отчуждения. Воздух пропитан радиацией, а система безопасности активировала бочки с токсинами. Не останавливайтесь.", 
+            en: "Escaping Neon City, you enter the exclusion zone. The air is thick with radiation, and the security system has deployed toxic barrels. Keep moving." 
+        }
+    },
+    {
+        id: 2,
+        name: { ru: "ИНФЕРНО", en: "INFERNO" },
+        pal: { grid: 0xff0033, bg: 0x1a0000, sTop: 0xff0077, sBot: 0xff0033 },
+        targetScore: 5000,
+        obsShape: 'cone', 
+        music: { bpm: 0.08, baseNotes: [82.41, 87.31, 82.41, 87.31, 98.00, 87.31, 82.41, 73.42, 82.41, 87.31, 82.41, 87.31, 110.00, 98.00, 87.31, 82.41], filterFreq: 1200 },
+        story: { 
+            ru: "Ядро системы перегревается. Виртуальное пространство плавится, превращаясь в цифровой ад. Берегитесь огневых шипов. Связь с реальностью слабеет.", 
+            en: "System core overheating. Virtual space is melting into a digital hell. Beware of the fire spikes. Connection to reality is fading." 
+        }
+    },
+    {
+        id: 3,
+        name: { ru: "ГЛИТЧ-ЯДРО", en: "GLITCH CORE" },
+        pal: { grid: 0xffffff, bg: 0x000000, sTop: 0xffffff, sBot: 0x555555 },
+        targetScore: 10000,
+        obsShape: 'dodecahedron', 
+        music: { bpm: 0.07, baseNotes: [65.41, 130.81, 77.78, 155.56, 87.31, 174.61, 98.00, 196.00, 65.41, 130.81, 77.78, 155.56, 87.31, 174.61, 98.00, 196.00], filterFreq: 2000 },
+        story: { 
+            ru: "Вы достигли Глитч-Ядра. Законы физики здесь не работают. Матрица разрушается. Выживите в этом хаосе, чтобы стать легендой.", 
+            en: "You have reached the Glitch Core. Physics do not apply here. The matrix is collapsing. Survive this chaos to become a legend." 
+        }
+    },
+    // ИСПРАВЛЕНИЕ: Добавлен 5-й финальный "Бесконечный" уровень
+    {
+        id: 4,
+        name: { ru: "СИНГУЛЯРНОСТЬ", en: "SINGULARITY" },
+        pal: { grid: 0xaa00ff, bg: 0x000000, sTop: 0xffffff, sBot: 0xaa00ff }, // Фиолетово-белая палитра
+        targetScore: 20000,
+        obsShape: 'torusKnot', // Сумасшедшая геометрия (вращающиеся узлы)
+        music: { bpm: 0.05, baseNotes: [130.81, 155.56, 174.61, 196.00, 130.81, 196.00, 174.61, 155.56, 261.63, 196.00, 174.61, 155.56, 130.81, 65.41, 65.41, 65.41], filterFreq: 3000 },
+        story: { 
+            ru: "Вы превзошли пределы системы. Дальше нет программного кода. Только чистая скорость и бесконечность. Посмотрим, как долго вы продержитесь в Сингулярности.", 
+            en: "You have transcended the system limits. There is no code beyond this point. Only pure speed and infinity. Let's see how long you last in the Singularity." 
+        }
+    }
 ];
 
 class GameEngine {
     constructor() {
         this.skins = [
-            { id: 'cyan', color: 0x00ffff, cost: 0, name: 'НЕОН' },
-            { id: 'pink', color: 0xff0077, cost: 100, name: 'МАГЕНТА' },
-            { id: 'green', color: 0x00ff66, cost: 250, name: 'ТОКСИК' },
-            { id: 'yellow', color: 0xffdd00, cost: 500, name: 'ИСКРА' },
-            { id: 'orange', color: 0xff6600, cost: 750, name: 'ПЛАМЯ' },
-            { id: 'red', color: 0xff0033, cost: 1000, name: 'ЛАЗЕР' },
-            { id: 'purple', color: 0x9900ff, cost: 1500, name: 'ПЛАЗМА' },
-            { id: 'white', color: 0xffffff, cost: 2000, name: 'КВАНТ' },
-            { id: 'gold', color: 0xffd700, cost: 3000, name: 'АУРУМ' },
-            { id: 'ghost', color: 0x88bbff, cost: 5000, name: 'ФАНТОМ' },
-            { id: 'hacker', color: 0x00ff00, cost: 999999, name: 'ХАКЕР' } // Секретный скин (не купить)
+            { id: 'cyan', color: 0x00ffff, cost: 0 }, { id: 'pink', color: 0xff0077, cost: 100 }, { id: 'green', color: 0x00ff66, cost: 250 },
+            { id: 'yellow', color: 0xffdd00, cost: 500 }, { id: 'orange', color: 0xff6600, cost: 750 }, { id: 'red', color: 0xff0033, cost: 1000 },
+            { id: 'purple', color: 0x9900ff, cost: 1500 }, { id: 'white', color: 0xffffff, cost: 2000 }, { id: 'gold', color: 0xffd700, cost: 3000 },
+            { id: 'ghost', color: 0x88bbff, cost: 5000 }, { id: 'hacker', color: 0x00ff00, cost: 999999 } 
         ];
         
         this.upgradesData = {
-            magnet: { name: 'МАГНИТ', baseCost: 500, maxLvl: 5, getVal: (lvl) => 5 + lvl * 2 },
-            shield: { name: 'ЩИТ (ШАНС)', baseCost: 500, maxLvl: 5, getVal: (lvl) => 0.002 + lvl * 0.0005 }
+            magnet: { id: 'u_mag', baseCost: 500, maxLvl: 5, getVal: (lvl) => 5 + lvl * 2 },
+            shield: { id: 'u_shield', baseCost: 500, maxLvl: 5, getVal: (lvl) => 0.002 + lvl * 0.0005 }
         };
 
+        this.lang = 'ru';
         this.isMuted = false;
         this.lastAdTime = 0;
-        this.currentBiome = 0;
-        this.targetBiome = 0;
         this.activeTab = 'skins';
         
-        // Отслеживание пасхалок
         this.titleClicks = 0;
         this.lastJumpTime = 0;
         this.barrelRollActive = false;
@@ -301,7 +329,7 @@ class GameEngine {
         this.musicStep = 0;
         this.masterGain = null;
         
-        this.baseFov = 70; // Адаптивный FOV
+        this.baseFov = 70;
 
         this.initLogic();
         this.initThree();
@@ -315,29 +343,74 @@ class GameEngine {
     async initYandex() {
         this.updateLoading(30);
         try {
-            if (typeof YaGames === 'undefined') throw new Error('Нет Yandex SDK');
-            const initPromise = YaGames.init();
-            const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 2000));
-            this.ysdk = await Promise.race([initPromise, timeoutPromise]);
-            this.ysdk.features.LoadingAPI?.ready();
-            this.updateLoading(60);
-            
-            try { this.lb = await this.ysdk.getLeaderboards(); } catch (e) {}
-            try {
-                this.playerCloud = await this.ysdk.getPlayer({ scopes: false });
-                const data = await this.playerCloud.getData();
-                if (data.coins !== undefined) {
-                    this.coins = data.coins || 0;
-                    this.hiScore = data.hiScore || 0;
-                    this.unlockedSkins = data.unlockedSkins || ['cyan'];
-                    this.currentSkin = data.currentSkin || 'cyan';
-                    this.upgrades = data.upgrades || { magnet: 0, shield: 0 };
-                    if (data.mission) this.mission = data.mission;
-                }
-            } catch (e) { console.warn("Ошибка облачного сохранения"); }
-            
-            this.finishLoading();
-        } catch(e) { this.finishLoading(); }
+            if (typeof YaGames !== 'undefined') {
+                const initPromise = YaGames.init();
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Yandex SDK Timeout')), 2500));
+                
+                this.ysdk = await Promise.race([initPromise, timeoutPromise]);
+                this.updateLoading(60);
+                
+                this.lang = this.ysdk.environment.i18n.lang || 'ru';
+                if (!I18N[this.lang]) this.lang = 'en'; 
+
+                try { this.lb = await this.ysdk.getLeaderboards(); } catch(e){}
+                try {
+                    this.playerCloud = await this.ysdk.getPlayer({ scopes: false });
+                    const data = await this.playerCloud.getData();
+                    if (data && data.coins !== undefined) {
+                        this.coins = data.coins || 0;
+                        this.hiScore = data.hiScore || 0;
+                        this.unlockedSkins = data.unlockedSkins || ['cyan'];
+                        this.currentSkin = data.currentSkin || 'cyan';
+                        this.upgrades = data.upgrades || { magnet: 0, shield: 0 };
+                        if (data.mission) this.mission = data.mission;
+                    }
+                } catch(e) {}
+            } else {
+                this.lang = navigator.language.startsWith('ru') ? 'ru' : 'en';
+            }
+        } catch(e) {
+            console.log('Локальный запуск (вне Яндекса):', e);
+            this.lang = navigator.language.startsWith('ru') ? 'ru' : 'en';
+        }
+        
+        this.applyTranslations();
+        this.finishLoading();
+    }
+
+    applyTranslations() {
+        const t = I18N[this.lang] || I18N['en'];
+        document.getElementById('loading-text').innerText = t.loading;
+        document.getElementById('lbl-dist').innerText = t.dist;
+        document.getElementById('lbl-coins').innerText = t.credits;
+        document.getElementById('magnet-indicator').innerText = t.magnet;
+        document.getElementById('shield-indicator').innerText = t.shield;
+        document.getElementById('lbl-level').innerText = t.lvl;
+        document.getElementById('main-title').innerHTML = t.title; 
+        document.getElementById('lbl-record').innerText = t.record;
+        document.getElementById('mission-title').innerText = t.mission_t;
+        document.getElementById('btn-start').innerText = t.start;
+        document.getElementById('btn-open-shop').innerText = t.garage;
+        document.getElementById('controls-text').innerHTML = t.controls;
+        document.getElementById('shop-title').innerText = t.shop_title;
+        document.getElementById('lbl-balance').innerText = t.balance;
+        document.getElementById('tab-skins').innerText = t.tab_skins;
+        document.getElementById('tab-upgrades').innerText = t.tab_upgs;
+        document.getElementById('btn-close-shop').innerText = t.to_menu;
+        document.getElementById('death-title').innerText = t.death_title;
+        document.getElementById('lbl-passed').innerText = t.passed;
+        document.getElementById('lbl-collected').innerText = t.collected;
+        document.getElementById('btn-double-coins').innerText = t.double;
+        document.getElementById('btn-revive').innerText = t.revive;
+        document.getElementById('btn-menu').innerText = t.finish;
+        document.getElementById('daily-title').innerText = t.daily_t;
+        document.getElementById('daily-desc').innerText = t.daily_d;
+        document.getElementById('btn-claim-daily').innerText = t.claim;
+        document.getElementById('btn-continue-story').innerText = t.continue_run;
+        document.getElementById('story-title').innerText = t.sector_reached;
+        
+        this.updateUI();
+        this.updateMissionUI();
     }
 
     saveProgress() {
@@ -350,9 +423,8 @@ class GameEngine {
 
         if (this.playerCloud) {
             this.playerCloud.setData({
-                coins: this.coins, hiScore: this.hiScore,
-                unlockedSkins: this.unlockedSkins, currentSkin: this.currentSkin,
-                upgrades: this.upgrades, mission: this.mission
+                coins: this.coins, hiScore: this.hiScore, unlockedSkins: this.unlockedSkins, 
+                currentSkin: this.currentSkin, upgrades: this.upgrades, mission: this.mission
             }).catch(() => {});
         }
     }
@@ -365,9 +437,13 @@ class GameEngine {
         this.updateLoading(100);
         this.applySkin();
         this.renderShop();
-        this.updateMissionUI();
-        this.updateUI();
-        setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+        
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+            if (this.ysdk && this.ysdk.features && this.ysdk.features.LoadingAPI) {
+                try { this.ysdk.features.LoadingAPI.ready(); } catch(e){}
+            }
+        }, 500);
     }
 
     updateLoading(p) { document.getElementById('loader-progress').style.width = p + '%'; }
@@ -400,11 +476,12 @@ class GameEngine {
     }
 
     generateMission() {
+        const t = I18N[this.lang] || I18N['en'];
         const types = [
-            { t: 'coins', text: 'Собери {n} монет', targets: [30, 50, 100], rewards: [50, 100, 250] },
-            { t: 'jumps', text: 'Сделай {n} прыжков', targets: [15, 30, 50], rewards: [50, 100, 200] },
-            { t: 'slides', text: 'Сделай {n} подкатов', targets: [10, 25, 40], rewards: [50, 100, 200] },
-            { t: 'score', text: 'Набери {n} м за заезд', targets: [1000, 3000, 5000], rewards: [100, 250, 500] }
+            { t: 'coins', text: t.m_coins, targets: [30, 50, 100], rewards: [50, 100, 250] },
+            { t: 'jumps', text: t.m_jumps, targets: [15, 30, 50], rewards: [50, 100, 200] },
+            { t: 'slides', text: t.m_slides, targets: [10, 25, 40], rewards: [50, 100, 200] },
+            { t: 'score', text: t.m_score, targets: [1000, 3000, 5000], rewards: [100, 250, 500] }
         ];
         const type = types[Math.floor(Math.random() * types.length)];
         const difficulty = Math.floor(Math.random() * 3);
@@ -424,7 +501,8 @@ class GameEngine {
             if (this.mission.progress >= this.mission.target) {
                 this.mission.progress = this.mission.target;
                 this.coins += this.mission.reward;
-                this.showNotification(`ЗАДАНИЕ ВЫПОЛНЕНО! +${this.mission.reward} 🪙`);
+                const t = I18N[this.lang] || I18N['en'];
+                this.showNotification(`${t.m_done}${this.mission.reward} 🪙`);
                 this.playSfx(1500, 'square', 0.5, 0.2);
                 
                 setTimeout(() => {
@@ -462,7 +540,6 @@ class GameEngine {
         this.unlockedSkins = JSON.parse(localStorage.getItem('neon_skins')) || ['cyan'];
         this.currentSkin = localStorage.getItem('neon_eq_skin') || 'cyan';
         this.upgrades = JSON.parse(localStorage.getItem('neon_upgrades')) || { magnet: 0, shield: 0 };
-        this.mission = JSON.parse(localStorage.getItem('neon_mission')) || this.generateMission();
         
         this.lane = 0;
         this.speed = 18;
@@ -470,6 +547,9 @@ class GameEngine {
         this.laneWidth = 3.5;
         this.magnetTime = 0;
         this.hasShield = false;
+        
+        this.currentLevelIdx = 0;
+        this.targetBiome = 0;
         
         this.activeObstacles = [];
         this.activeCoins = [];
@@ -479,8 +559,10 @@ class GameEngine {
     }
 
     updateUI() {
-        document.getElementById('high-score').innerText = `РЕКОРД: ${this.hiScore}`;
+        document.getElementById('high-score').innerText = this.hiScore;
         document.getElementById('coins').innerText = this.coins;
+        document.getElementById('shop-coins').innerText = this.coins;
+        document.getElementById('level-val').innerText = (this.currentLevelIdx + 1);
     }
 
     createFloorGlowTexture() {
@@ -514,7 +596,7 @@ class GameEngine {
 
     initThree() {
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(PALETTES[0].bg, 15, 150);
+        this.scene.fog = new THREE.Fog(LEVELS[0].pal.bg, 15, 150);
         
         this.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -524,12 +606,11 @@ class GameEngine {
         
         this.updateCameraFraming();
 
-        // Пол
         this.floorMat = new THREE.ShaderMaterial({
             uniforms: { 
                 uTime: {value: 0}, uSpeed: {value: 0},
-                uGridColor: {value: new THREE.Color(PALETTES[0].grid)},
-                uBgColor: {value: new THREE.Color(PALETTES[0].bg)}
+                uGridColor: {value: new THREE.Color(LEVELS[0].pal.grid)},
+                uBgColor: {value: new THREE.Color(LEVELS[0].pal.bg)}
             },
             vertexShader: SHADERS.floorV, fragmentShader: SHADERS.floorF
         });
@@ -537,12 +618,11 @@ class GameEngine {
         floor.rotation.x = -Math.PI / 2;
         this.scene.add(floor);
 
-        // Солнце
         this.sunMat = new THREE.ShaderMaterial({
             uniforms: { 
                 uTime: {value: 0},
-                uSunTop: {value: new THREE.Color(PALETTES[0].sTop)},
-                uSunBot: {value: new THREE.Color(PALETTES[0].sBot)}
+                uSunTop: {value: new THREE.Color(LEVELS[0].pal.sTop)},
+                uSunBot: {value: new THREE.Color(LEVELS[0].pal.sBot)}
             },
             vertexShader: SHADERS.sunV, fragmentShader: SHADERS.sunF, transparent: true
         });
@@ -550,7 +630,6 @@ class GameEngine {
         sun.position.set(0, 30, -150);
         this.scene.add(sun);
 
-        // ГРУППА ИГРОКА
         this.player = new THREE.Group();
         
         const bodyGeo = new THREE.BoxGeometry(1.0, 1.0, 1.0);
@@ -559,7 +638,7 @@ class GameEngine {
         
         const frameGeo = new THREE.BoxGeometry(1.05, 1.05, 1.05);
         const edges = new THREE.EdgesGeometry(frameGeo);
-        this.playerEdgeMat = new THREE.LineBasicMaterial({ color: this.getSkinColor(), linewidth: 2 });
+        this.playerEdgeMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
         this.playerLines = new THREE.LineSegments(edges, this.playerEdgeMat);
         bodyMesh.add(this.playerLines);
 
@@ -569,7 +648,7 @@ class GameEngine {
         bodyMesh.add(this.playerInnerLines);
 
         const wheelGeo = new THREE.TorusGeometry(0.35, 0.1, 8, 24);
-        this.playerWheelMat = new THREE.MeshBasicMaterial({ color: this.getSkinColor() });
+        this.playerWheelMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
         this.wheelL = new THREE.Mesh(wheelGeo, this.playerWheelMat);
         this.wheelL.position.set(-0.55, -0.3, 0);
         this.wheelL.rotation.y = Math.PI / 2;
@@ -588,7 +667,6 @@ class GameEngine {
         
         this.player.add(bodyMesh);
 
-        // Щит
         this.shieldMesh = new THREE.Mesh(
             new THREE.SphereGeometry(1.6, 16, 16),
             new THREE.MeshBasicMaterial({ color: 0x00ff66, transparent: true, opacity: 0.3, wireframe: true })
@@ -597,11 +675,10 @@ class GameEngine {
         this.shieldMesh.visible = false;
         this.player.add(this.shieldMesh);
 
-        // Свечение под кубом
         const glowTex = this.createFloorGlowTexture();
         this.floorGlow = new THREE.Mesh(
             new THREE.PlaneGeometry(6, 6),
-            new THREE.MeshBasicMaterial({ color: this.getSkinColor(), transparent: true, opacity: 0.8, map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false })
+            new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.8, map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false })
         );
         this.floorGlow.rotation.x = -Math.PI / 2;
         this.floorGlow.position.y = 0.05;
@@ -609,7 +686,7 @@ class GameEngine {
 
         this.scene.add(this.player);
 
-        this.pLight = new THREE.PointLight(this.getSkinColor(), 3, 15);
+        this.pLight = new THREE.PointLight(0x00ffff, 3, 15);
         this.pLight.position.set(0, 1.0, 0);
         this.player.add(this.pLight);
 
@@ -623,10 +700,14 @@ class GameEngine {
         this.scene.add(new THREE.AmbientLight(0x222222));
     }
 
-    getSkinColor() { return this.skins.find(s => s.id === this.currentSkin).color; }
+    getSkinColor() { 
+        const s = this.skins.find(s => s.id === this.currentSkin);
+        return s ? s.color : 0x00ffff;
+    }
 
     applySkin() {
         const skin = this.skins.find(s => s.id === this.currentSkin);
+        if(!skin) return;
         const hex = skin.color;
         
         this.playerEdgeMat.color.setHex(hex);
@@ -649,11 +730,10 @@ class GameEngine {
     renderShop() {
         const grid = document.getElementById('shop-grid');
         grid.innerHTML = '';
-        document.getElementById('shop-coins').innerText = this.coins;
+        const t = I18N[this.lang] || I18N['en'];
         
         if (this.activeTab === 'skins') {
             this.skins.forEach(skin => {
-                // Скрываем секретный скин из магазина, если он не разблокирован
                 if (skin.id === 'hacker' && !this.unlockedSkins.includes('hacker')) return;
 
                 const btn = document.createElement('div');
@@ -663,11 +743,13 @@ class GameEngine {
                 btn.className = `shop-item ${isEquipped ? 'selected' : ''} ${!isUnlocked ? 'locked' : ''}`;
                 btn.style.borderColor = '#' + skin.color.toString(16).padStart(6, '0');
                 
+                const skinName = t['s_' + skin.id] || skin.name;
+
                 if (isUnlocked) {
-                    btn.innerHTML = `<span>${skin.name}</span><span class="item-price">${isEquipped ? 'ВЫБРАН' : 'ОДЕТЬ'}</span>`;
+                    btn.innerHTML = `<span>${skinName}</span><span class="item-price">${isEquipped ? t.equipped : t.equip}</span>`;
                     btn.onclick = () => { this.currentSkin = skin.id; this.applySkin(); this.renderShop(); };
                 } else {
-                    btn.innerHTML = `<span>${skin.name}</span><span class="item-price">🪙 ${skin.cost}</span>`;
+                    btn.innerHTML = `<span>${skinName}</span><span class="item-price">🪙 ${skin.cost}</span>`;
                     btn.onclick = () => {
                         if (this.coins >= skin.cost) {
                             this.coins -= skin.cost; this.unlockedSkins.push(skin.id); this.currentSkin = skin.id;
@@ -691,7 +773,8 @@ class GameEngine {
                 for(let i=0; i<upg.maxLvl; i++) barsHTML += `<div class="u-bar ${i < lvl ? 'fill' : ''}"></div>`;
                 barsHTML += '</div>';
 
-                btn.innerHTML = `<span>${upg.name}</span>${barsHTML}<span class="item-price">${isMax ? 'МАКСИМУМ' : '🪙 ' + cost}</span>`;
+                const uName = t[upg.id] || upg.name;
+                btn.innerHTML = `<span>${uName}</span>${barsHTML}<span class="item-price">${isMax ? t.max : '🪙 ' + cost}</span>`;
                 
                 btn.onclick = () => {
                     if (!isMax) {
@@ -748,7 +831,6 @@ class GameEngine {
     pauseAudioForAd() { if (this.audioCtx && this.audioCtx.state === 'running') this.audioCtx.suspend(); }
     resumeAudioAfterAd() { if (this.audioCtx && this.audioCtx.state === 'suspended' && !this.isMuted) this.audioCtx.resume(); }
 
-    // --- SYNTHWAVE MUSIC GENERATOR ---
     playNoise(time, dur, vol, freq, type) {
         if (!this.audioCtx) return;
         const bufferSize = this.audioCtx.sampleRate * dur;
@@ -765,7 +847,9 @@ class GameEngine {
     scheduleMusicNote(step, time) {
         if (this.isMuted || !this.audioCtx) return;
 
-        if (step % 4 === 0) { // Kick
+        const levelData = LEVELS[this.currentLevelIdx];
+        
+        if (step % 4 === 0) { 
             let osc = this.audioCtx.createOscillator(); let gain = this.audioCtx.createGain();
             osc.connect(gain); gain.connect(this.masterGain);
             osc.frequency.setValueAtTime(150, time); osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.1);
@@ -773,16 +857,17 @@ class GameEngine {
             osc.start(time); osc.stop(time + 0.1);
         }
 
-        if (step % 2 !== 0) this.playNoise(time, 0.05, 0.1, 5000, 'highpass'); // Hi-Hat
-        if (step === 4 || step === 12) this.playNoise(time, 0.2, 0.3, 1500, 'lowpass'); // Snare
+        if (step % 2 !== 0) this.playNoise(time, 0.05, 0.1, 5000, 'highpass'); 
+        if (step === 4 || step === 12) this.playNoise(time, 0.2, 0.3, 1500, 'lowpass'); 
 
-        // Arpeggio C minor
-        const bassNotes = [65.41, 65.41, 65.41, 65.41, 77.78, 77.78, 77.78, 77.78, 87.31, 87.31, 98.00, 98.00, 65.41, 65.41, 65.41, 65.41];
+        const bassNotes = levelData.music.baseNotes;
         let osc = this.audioCtx.createOscillator();
         let filter = this.audioCtx.createBiquadFilter();
         let gain = this.audioCtx.createGain();
-        osc.type = 'sawtooth'; osc.frequency.value = bassNotes[step];
-        filter.type = 'lowpass'; filter.frequency.setValueAtTime(600, time); filter.frequency.exponentialRampToValueAtTime(100, time + 0.1); 
+        osc.type = 'sawtooth'; osc.frequency.value = bassNotes[step % bassNotes.length];
+        filter.type = 'lowpass'; 
+        filter.frequency.setValueAtTime(levelData.music.filterFreq, time); 
+        filter.frequency.exponentialRampToValueAtTime(100, time + 0.1); 
         gain.gain.setValueAtTime(0.4, time); gain.gain.linearRampToValueAtTime(0.01, time + 0.15);
         osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
         osc.start(time); osc.stop(time + 0.15);
@@ -790,32 +875,32 @@ class GameEngine {
 
     updateProceduralMusic() {
         if (!this.audioCtx || this.isMuted || this.state !== 'PLAYING') return;
-        const beatLen = 0.12; const lookahead = 0.1;
+        const beatLen = LEVELS[this.currentLevelIdx].music.bpm; 
+        const lookahead = 0.1;
         while (this.musicNextNoteTime < this.audioCtx.currentTime + lookahead) {
             this.scheduleMusicNote(this.musicStep, this.musicNextNoteTime);
             this.musicNextNoteTime += beatLen;
             this.musicStep = (this.musicStep + 1) % 16;
         }
     }
-    // --- END MUSIC GENERATOR ---
 
     bindEvents() {
         let sx = null, sy = null;
         let swipeProcessed = false;
 
-        // ПАСХАЛКА 1: Секретный скин по клику на тайтл
         document.getElementById('main-title').onclick = () => {
             this.titleClicks++;
             if (this.titleClicks === 5) {
+                const t = I18N[this.lang] || I18N['en'];
                 if (!this.unlockedSkins.includes('hacker')) {
                     this.unlockedSkins.push('hacker');
                     this.currentSkin = 'hacker';
-                    this.showNotification("КОД ВЗЛОМАН: ОТКРЫТ СКИН 'ХАКЕР' 👾");
+                    this.showNotification(t.hacker);
                     this.playSfx(2000, 'square', 0.5, 0.2);
                     this.saveProgress();
                     this.applySkin();
                 } else {
-                    this.showNotification("ТЫ УЖЕ ХАКЕР!");
+                    this.showNotification(t.hacker_err);
                 }
                 this.titleClicks = 0;
             }
@@ -828,12 +913,9 @@ class GameEngine {
             this.initAudioContext();
         });
 
-        // МГНОВЕННЫЙ СВАЙП
         window.addEventListener('pointermove', e => {
             if (!sx || !sy || swipeProcessed) return;
-            
-            const dx = e.clientX - sx;
-            const dy = e.clientY - sy;
+            const dx = e.clientX - sx, dy = e.clientY - sy;
             const threshold = 30;
 
             if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
@@ -849,11 +931,46 @@ class GameEngine {
 
         window.addEventListener('pointerup', e => { sx = null; sy = null; swipeProcessed = false; });
 
+        window.addEventListener('keydown', e => {
+            if (this.state !== 'PLAYING') return;
+            switch(e.key) {
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                case 'Ф':
+                case 'ф':
+                    this.steer(-1);
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                case 'В':
+                case 'в':
+                    this.steer(1);
+                    break;
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                case 'Ц':
+                case 'ц':
+                    this.jump();
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                case 'Ы':
+                case 'ы':
+                    this.slide();
+                    break;
+            }
+        });
+
         document.getElementById('btn-start').onclick = () => { this.initAudioContext(); this.start(); }
         document.getElementById('btn-revive').onclick = () => this.rewarded(false);
         document.getElementById('btn-double-coins').onclick = () => this.rewarded(true);
         document.getElementById('btn-menu').onclick = () => this.toMenu();
         document.getElementById('btn-audio').onclick = () => { this.initAudioContext(); this.toggleAudio(); }
+        document.getElementById('btn-continue-story').onclick = () => { this.resumeFromStory(); }
         
         document.getElementById('btn-open-shop').onclick = () => {
             document.getElementById('screen-start').classList.remove('active');
@@ -884,7 +1001,7 @@ class GameEngine {
         });
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.audioCtx) this.audioCtx.suspend();
-            else if (!document.hidden && this.audioCtx && !this.isMuted && this.state !== 'GAMEOVER') this.audioCtx.resume();
+            else if (!document.hidden && this.audioCtx && !this.isMuted && (this.state === 'PLAYING' || this.state === 'STORY')) this.audioCtx.resume();
         });
     }
 
@@ -898,7 +1015,7 @@ class GameEngine {
         if (this.state !== 'PLAYING' || this.isJumping) return;
         this.isJumping = true; 
         this.jumpV = 0.22;
-        this.lastJumpTime = performance.now(); // Для проверки Barrel Roll
+        this.lastJumpTime = performance.now(); 
         this.playSfx(500, 'sine', 0.2);
         this.updateMission('jumps', 1);
     }
@@ -906,17 +1023,17 @@ class GameEngine {
     slide() {
         if (this.state !== 'PLAYING' || this.isSliding) return;
         
-        // ПАСХАЛКА 2: БОЧКА
         if (this.isJumping && performance.now() - this.lastJumpTime < 400 && !this.barrelRollActive) {
             this.barrelRollActive = true;
             this.combo += 2;
-            this.showNotification("СДЕЛАЙ БОЧКУ! КОМБО +2");
+            const t = I18N[this.lang] || I18N['en'];
+            this.showNotification(t.barrel);
             this.playSfx(1000, 'square', 0.4, 0.2);
             setTimeout(() => { 
                 this.barrelRollActive = false; 
-                this.player.children[0].rotation.x = 0; // Сбрасываем вращение
+                this.player.children[0].rotation.x = 0; 
             }, 800);
-            return; // Отменяем обычный подкат
+            return; 
         }
 
         this.isSliding = true; 
@@ -940,20 +1057,89 @@ class GameEngine {
         document.documentElement.style.setProperty('--neon-pink', '#' + pal.sBot.toString(16).padStart(6, '0'));
     }
 
+    showStoryScreen(lvlIdx) {
+        this.state = 'STORY';
+        const levelData = LEVELS[lvlIdx];
+        
+        const t = I18N[this.lang] || I18N['en'];
+        const lvlName = levelData.name[this.lang] || levelData.name['en'];
+        const storyText = levelData.story[this.lang] || levelData.story['en'];
+        
+        // Меняем title на "Сектор достигнут", чтобы было понятно, что происходит
+        document.getElementById('story-title').innerText = t.sector_reached + ": " + lvlName;
+        document.getElementById('story-text').innerText = storyText;
+        
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-story').classList.add('active');
+        document.getElementById('speed-lines').style.opacity = '0';
+    }
+
+    resumeFromStory() {
+        this.state = 'PLAYING';
+        document.getElementById('screen-story').classList.remove('active');
+        document.getElementById('speed-lines').style.opacity = '1';
+        
+        this.speed += 3;
+        this.playSfx(400, 'square', 0.5, 0.3);
+
+        const flash = document.getElementById('level-flash');
+        flash.classList.add('flash');
+        setTimeout(() => flash.classList.remove('flash'), 100);
+        
+        const banner = document.getElementById('level-banner');
+        const t = I18N[this.lang] || I18N['en'];
+        const lvlName = LEVELS[this.currentLevelIdx].name[this.lang] || LEVELS[this.currentLevelIdx].name['en'];
+        
+        // Если это последний уровень (Бесконечность), просто выводим его название
+        if (this.currentLevelIdx === LEVELS.length - 1) {
+            document.getElementById('lb-title').innerText = "";
+        } else {
+            document.getElementById('lb-title').innerText = `${t.level} ${this.currentLevelIdx + 1}`;
+        }
+        
+        document.getElementById('lb-name').innerText = lvlName;
+        banner.classList.add('show');
+        setTimeout(() => banner.classList.remove('show'), 3500);
+
+        if (this.audioCtx) this.musicNextNoteTime = this.audioCtx.currentTime + 0.1;
+    }
+
+    setLevel(lvlIdx) {
+        this.currentLevelIdx = lvlIdx;
+        this.targetBiome = lvlIdx;
+        this.currentBiome = lvlIdx;
+        const pal = LEVELS[lvlIdx].pal;
+        
+        this.activeObstacles.forEach(o => { o.visible = false; });
+        this.pool.obstacles = []; 
+        
+        this.setBiomeColors(pal);
+        
+        const t = I18N[this.lang] || I18N['en'];
+        if (lvlIdx === LEVELS.length - 1) {
+            document.getElementById('level-val').innerText = "∞"; // Бесконечность на последнем уровне
+        } else {
+            document.getElementById('level-val').innerText = (lvlIdx + 1);
+        }
+        
+        if (this.state === 'PLAYING' && lvlIdx > 0) {
+            this.showStoryScreen(lvlIdx);
+        }
+    }
+
     start() {
         if (this.audioCtx && this.audioCtx.state === 'suspended' && !this.isMuted) this.audioCtx.resume();
         this.state = 'PLAYING';
-        this.speed = 18;
+        this.speed = 15;
         this.score = 0;
         this.runCoins = 0;
         this.combo = 1;
         this.magnetTime = 0;
         this.hasShield = false;
         this.shieldMesh.visible = false;
-        this.currentBiome = 0;
-        this.targetBiome = 0;
         this.barrelRollActive = false;
-        this.setBiomeColors(PALETTES[0]);
+        
+        this.setLevel(0);
 
         if (this.audioCtx) {
             this.musicNextNoteTime = this.audioCtx.currentTime + 0.1;
@@ -971,7 +1157,7 @@ class GameEngine {
                 callbacks: {
                     onOpen: () => { this.pauseAudioForAd(); },
                     onClose: () => { this.resumeAudioAfterAd(); this.lastAdTime = Date.now(); },
-                    onError: (e) => { this.resumeAudioAfterAd(); console.log('Ошибка рекламы', e); }
+                    onError: (e) => { this.resumeAudioAfterAd(); }
                 } 
             });
         }
@@ -985,7 +1171,7 @@ class GameEngine {
         this.activeObstacles.forEach(o => { o.visible = false; if(o.isUFO) this.scene.remove(o); });
         this.activeCoins.forEach(c => c.visible = false);
         this.scenery.forEach(s => s.visible = false);
-        this.setBiomeColors(PALETTES[0]); 
+        this.setLevel(0); 
     }
 
     spawnScenery() {
@@ -1004,14 +1190,14 @@ class GameEngine {
                 this.scene.add(group);
             }
             
-            group.lamp.material.color.setHex(PALETTES[this.targetBiome].grid);
+            group.lamp.material.color.setHex(LEVELS[this.currentLevelIdx].pal.grid);
             group.position.set(side * 8, 0, -150);
             group.visible = true;
             this.scenery.push(group);
         }
 
-        // ПАСХАЛКА 3: Редкое НЛО на фоне
-        if (Math.random() < 0.001) {
+        // НЛО спавнится только не на последнем уровне
+        if (Math.random() < 0.001 && this.currentLevelIdx !== LEVELS.length - 1) {
             const ufo = new THREE.Group();
             const dome = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.8}));
             const base = new THREE.Mesh(new THREE.TorusGeometry(2, 0.4, 8, 24), new THREE.MeshStandardMaterial({color: 0x222222, emissive: 0x00ff00, emissiveIntensity: 0.5}));
@@ -1019,42 +1205,58 @@ class GameEngine {
             ufo.position.set(30, 15, -120);
             ufo.isUFO = true;
             this.scene.add(ufo);
-            this.activeObstacles.push(ufo); // Используем массив препятствий просто для движения, без коллизий
+            this.activeObstacles.push(ufo); 
         }
+    }
+
+    spawnObstacle() {
+        let o = this.pool.obstacles.pop();
+        const obsType = LEVELS[this.currentLevelIdx].obsShape;
+
+        if (!o) {
+            let geo;
+            if (obsType === 'cylinder') geo = new THREE.CylinderGeometry(1, 1, 1.5, 16);
+            else if (obsType === 'cone') geo = new THREE.ConeGeometry(1.2, 2, 4);
+            else if (obsType === 'dodecahedron') geo = new THREE.DodecahedronGeometry(1.2);
+            // ПАСХАЛКА 5 уровня: вращающиеся тороидальные узлы (квантовые аномалии)
+            else if (obsType === 'torusKnot') geo = new THREE.TorusKnotGeometry(0.8, 0.2, 64, 8); 
+            else geo = new THREE.BoxGeometry(2, 1.2, 1.5);
+
+            o = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0xff00c8, emissiveIntensity: 1 }));
+        }
+
+        const isTall = Math.random() > 0.7;
+        o.scale.y = isTall ? 4 : 1;
+        o.isTall = isTall;
+        o.baseShape = obsType; // запоминаем форму для анимации
+        
+        o.isMover = (this.score > 1000 && Math.random() < 0.1);
+        if (o.isMover) {
+            o.material.emissive.setHex(0xff0000); 
+        } else {
+            o.material.emissive.setHex(LEVELS[this.currentLevelIdx].pal.sBot);
+        }
+
+        o.targetLane = (Math.floor(Math.random()*3)-1);
+        o.position.set(o.targetLane * this.laneWidth, o.scale.y/2, -150);
+        
+        if (o.isMover) {
+            let startLane = o.targetLane === 0 ? 1 : 0; 
+            o.position.x = startLane * this.laneWidth;
+        }
+
+        o.visible = true; 
+        this.scene.add(o); 
+        this.activeObstacles.push(o);
     }
 
     spawn() {
         this.spawnScenery();
 
-        // Прогрессивная сложность: чем выше скорость, тем чаще спавн
-        const spawnMultiplier = this.speed / 18;
+        const spawnMultiplier = this.speed / 15;
 
         if (Math.random() < 0.02 * spawnMultiplier) {
-            let o = this.pool.obstacles.pop() || new THREE.Mesh(
-                new THREE.BoxGeometry(2, 1.2, 1.5),
-                new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0xff00c8, emissiveIntensity: 1 })
-            );
-            const isTall = Math.random() > 0.7;
-            o.scale.y = isTall ? 4 : 1;
-            o.isTall = isTall;
-            
-            o.isMover = (this.score > 1000 && Math.random() < 0.1);
-            if (o.isMover) {
-                o.material.emissive.setHex(0xff0000); 
-                o.targetLane = (Math.floor(Math.random()*3)-1);
-            } else {
-                o.material.emissive.setHex(PALETTES[this.targetBiome].sBot);
-                o.targetLane = (Math.floor(Math.random()*3)-1);
-            }
-
-            o.position.set(o.targetLane * this.laneWidth, o.scale.y/2, -150);
-            
-            if (o.isMover) {
-                let startLane = o.targetLane === 0 ? 1 : 0; 
-                o.position.x = startLane * this.laneWidth;
-            }
-
-            o.visible = true; this.scene.add(o); this.activeObstacles.push(o);
+            this.spawnObstacle();
         }
         
         if (Math.random() < 0.03 * spawnMultiplier) {
@@ -1125,7 +1327,8 @@ class GameEngine {
                             this.saveProgress();
                             this.updateUI();
                             document.getElementById('btn-double-coins').style.display = 'none';
-                            this.showNotification('КРЕДИТЫ УДВОЕНЫ!');
+                            const t = I18N[this.lang] || I18N['en'];
+                            this.showNotification(t.doubled);
                         } else {
                             this.revive(); 
                         }
@@ -1147,7 +1350,7 @@ class GameEngine {
 
     revive() {
         this.state = 'PLAYING';
-        this.speed = 18;
+        this.speed = 15 + (this.currentLevelIdx * 3); 
         this.activateShield(); 
         
         if (this.audioCtx) this.musicNextNoteTime = this.audioCtx.currentTime + 0.1;
@@ -1196,35 +1399,31 @@ class GameEngine {
         requestAnimationFrame(() => this.animate());
         const t = performance.now() * 0.001;
         
-        if (this.state === 'PLAYING') {
+        if (this.state === 'PLAYING' || this.state === 'STORY') {
             
-            this.updateProceduralMusic();
+            if (this.state === 'PLAYING') {
+                this.updateProceduralMusic();
+                this.score += 0.1 * (this.speed/10) * this.combo;
+                this.speed += 0.0015;
+                
+                // Проверка перехода на следующий уровень
+                if (this.currentLevelIdx < LEVELS.length - 1) {
+                    const nextLevel = LEVELS[this.currentLevelIdx + 1];
+                    if (this.score >= nextLevel.targetScore) {
+                        this.setLevel(this.currentLevelIdx + 1);
+                    }
+                }
+                this.updateMission('score', this.score);
+            }
 
-            this.score += 0.1 * (this.speed/10) * this.combo;
-            
-            // ПРОГРЕССИВНАЯ СКОРОСТЬ
-            this.speed += 0.0015 + (this.score * 0.0000005);
-            
-            this.camera.fov = this.baseFov + (this.speed-18)*1.2;
+            this.camera.fov = this.baseFov + (this.speed-15)*1.2;
             this.camera.updateProjectionMatrix();
-
-            const newBiome = Math.floor(this.score / 2000) % PALETTES.length;
-            if (newBiome !== this.targetBiome) {
-                this.targetBiome = newBiome;
-                this.showNotification('СМЕНА ЗОНЫ!');
-            }
-            if (this.currentBiome !== this.targetBiome) {
-                this.currentBiome = this.targetBiome;
-                this.setBiomeColors(PALETTES[this.currentBiome]);
-            }
-
-            this.updateMission('score', this.score);
 
             this.floorMat.uniforms.uTime.value = t;
             this.floorMat.uniforms.uSpeed.value = this.speed;
             this.sunMat.uniforms.uTime.value = t;
 
-            if (this.magnetTime > 0) {
+            if (this.magnetTime > 0 && this.state === 'PLAYING') {
                 this.magnetTime -= 0.016;
                 document.getElementById('magnet-indicator').style.display = 'block';
             } else document.getElementById('magnet-indicator').style.display = 'none';
@@ -1234,42 +1433,43 @@ class GameEngine {
                 this.shieldMesh.rotation.z += 0.02;
             }
 
-            const targetX = this.lane * this.laneWidth;
-            this.player.position.x += (targetX - this.player.position.x) * 0.18; 
-            
-            const tilt = (this.player.position.x - targetX) * 0.12;
-            this.player.rotation.z = tilt;
-            this.player.rotation.y = tilt * 0.3;
-            this.camera.rotation.z = tilt * -0.05; 
-            
-            this.wheelL.rotation.x -= this.speed * 0.02;
-            this.wheelR.rotation.x -= this.speed * 0.02;
-
-            if (this.isJumping) {
-                this.player.position.y += this.jumpV;
-                this.jumpV -= 0.012;
+            if (this.state === 'PLAYING') {
+                const targetX = this.lane * this.laneWidth;
+                this.player.position.x += (targetX - this.player.position.x) * 0.18; 
                 
-                // Вращение для Barrel Roll
-                if (this.barrelRollActive) {
-                    this.player.children[0].rotation.x -= 0.15;
-                }
+                const tilt = (this.player.position.x - targetX) * 0.12;
+                this.player.rotation.z = tilt;
+                this.player.rotation.y = tilt * 0.3;
+                this.camera.rotation.z = tilt * -0.05; 
+                
+                this.wheelL.rotation.x -= this.speed * 0.02;
+                this.wheelR.rotation.x -= this.speed * 0.02;
 
-                if (this.player.position.y <= 0.65) { 
-                    this.player.position.y = 0.65; 
-                    this.isJumping = false; 
+                if (this.isJumping) {
+                    this.player.position.y += this.jumpV;
+                    this.jumpV -= 0.012;
+                    
                     if (this.barrelRollActive) {
-                        this.barrelRollActive = false;
-                        this.player.children[0].rotation.x = 0;
+                        this.player.children[0].rotation.x -= 0.15;
+                    }
+
+                    if (this.player.position.y <= 0.65) { 
+                        this.player.position.y = 0.65; 
+                        this.isJumping = false; 
+                        if (this.barrelRollActive) {
+                            this.barrelRollActive = false;
+                            this.player.children[0].rotation.x = 0;
+                        }
                     }
                 }
-            }
 
-            this.spawn();
-            this.spawnEngineSparks();
+                this.spawn();
+                this.spawnEngineSparks();
+            }
 
             this.scenery.forEach((s, i) => {
                 if (!s.visible) return;
-                s.position.z += this.speed * 0.05;
+                if (this.state === 'PLAYING') s.position.z += this.speed * 0.05;
                 if (s.position.z > 10) {
                     s.visible = false;
                     this.scenery.splice(i, 1);
@@ -1280,26 +1480,35 @@ class GameEngine {
             this.activeObstacles.forEach((o, i) => {
                 if (!o.visible) return;
 
-                // Если это НЛО
                 if (o.isUFO) {
-                    o.position.x -= 0.15;
-                    o.rotation.y -= 0.02;
+                    if (this.state === 'PLAYING') {
+                        o.position.x -= 0.15;
+                        o.rotation.y -= 0.02;
+                    }
                     if (o.position.x < -40) {
                         this.scene.remove(o);
                         this.activeObstacles.splice(i, 1);
                     }
-                    return; // НЛО не имеет коллизий с игроком
+                    return; 
                 }
                 
-                o.position.z += this.speed * 0.05;
+                if (this.state === 'PLAYING') {
+                    o.position.z += this.speed * 0.05;
+                    // Вращение узлов на 5 уровне
+                    if (o.baseShape === 'torusKnot') {
+                        o.rotation.x += 0.05;
+                        o.rotation.y += 0.05;
+                    }
+                }
 
-                if (o.isMover && o.position.z > -60 && o.position.z < -20) {
+                if (o.isMover && o.position.z > -60 && o.position.z < -20 && this.state === 'PLAYING') {
                     const oTargetX = o.targetLane * this.laneWidth;
                     o.position.x += (oTargetX - o.position.x) * 0.08;
-                    o.rotation.y = (oTargetX - o.position.x) * 0.1; 
-                } else if (o.isMover) { o.rotation.y = 0; }
+                    // Для ТорусКнота оставляем его собственное вращение
+                    if (o.baseShape !== 'torusKnot') o.rotation.y = (oTargetX - o.position.x) * 0.1; 
+                } else if (o.isMover && o.baseShape !== 'torusKnot') { o.rotation.y = 0; }
 
-                if (Math.abs(o.position.z - this.player.position.z) < 1.4 && Math.abs(o.position.x - this.player.position.x) < 1.4) {
+                if (this.state === 'PLAYING' && Math.abs(o.position.z - this.player.position.z) < 1.4 && Math.abs(o.position.x - this.player.position.x) < 1.4) {
                     let hit = false;
                     if (o.isTall && !this.isSliding) hit = true;
                     else if (!o.isTall && this.player.position.y < 1.5) hit = true;
@@ -1321,16 +1530,18 @@ class GameEngine {
 
             this.activeCoins.forEach((c, i) => {
                 if (!c.visible) return;
-                c.position.z += this.speed * 0.05;
-                c.rotation.y += 0.1;
+                if (this.state === 'PLAYING') {
+                    c.position.z += this.speed * 0.05;
+                    c.rotation.y += 0.1;
+                }
 
-                if (this.magnetTime > 0 && c.type === 'coin' && c.position.z > -60 && c.position.z < 0) {
+                if (this.magnetTime > 0 && c.type === 'coin' && c.position.z > -60 && c.position.z < 0 && this.state === 'PLAYING') {
                     c.position.x += (this.player.position.x - c.position.x) * 0.08;
                     c.position.y += (this.player.position.y - c.position.y) * 0.08;
                     c.position.z += (this.player.position.z - c.position.z) * 0.05;
                 }
 
-                if (Math.abs(c.position.z - this.player.position.z) < 1.5 && Math.abs(c.position.x - this.player.position.x) < 1.5 && Math.abs(c.position.y - this.player.position.y) < 1.5) {
+                if (this.state === 'PLAYING' && Math.abs(c.position.z - this.player.position.z) < 1.5 && Math.abs(c.position.x - this.player.position.x) < 1.5 && Math.abs(c.position.y - this.player.position.y) < 1.5) {
                     if (c.type === 'magnet') {
                         this.magnetTime = this.upgradesData.magnet.getVal(this.upgrades.magnet);
                         this.playSfx(1200, 'square', 0.2, 0.1);
@@ -1356,21 +1567,22 @@ class GameEngine {
                 }
             });
 
-            this.stars.position.z += this.speed * 0.02;
-            if (this.stars.position.z > 100) this.stars.position.z = 0;
+            if (this.state === 'PLAYING') {
+                this.stars.position.z += this.speed * 0.02;
+                if (this.stars.position.z > 100) this.stars.position.z = 0;
 
-            for (let i = this.engineParticles.length - 1; i >= 0; i--) {
-                const p = this.engineParticles[i];
-                p.position.add(p.velocity);
-                p.scale.multiplyScalar(0.85);
-                p.material.opacity -= 0.05; 
-                if (p.scale.x < 0.05 || p.material.opacity <= 0) { this.scene.remove(p); this.engineParticles.splice(i, 1); }
+                for (let i = this.engineParticles.length - 1; i >= 0; i--) {
+                    const p = this.engineParticles[i];
+                    p.position.add(p.velocity);
+                    p.scale.multiplyScalar(0.85);
+                    p.material.opacity -= 0.05; 
+                    if (p.scale.x < 0.05 || p.material.opacity <= 0) { this.scene.remove(p); this.engineParticles.splice(i, 1); }
+                }
+
+                document.getElementById('score').innerText = Math.floor(this.score);
+                const cVal = Math.floor(this.combo);
+                document.getElementById('combo').innerText = 'x' + cVal;
             }
-
-            document.getElementById('score').innerText = Math.floor(this.score);
-            const cVal = Math.floor(this.combo);
-            document.getElementById('combo').innerText = cVal;
-            document.getElementById('combo-wrap').className = cVal > 1 ? 'show' : '';
         }
 
         this.renderer.render(this.scene, this.camera);
